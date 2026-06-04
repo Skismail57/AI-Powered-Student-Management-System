@@ -1,140 +1,268 @@
 # AI-Powered Student Management System
 
-A full-stack student management platform built for educational institutions with role-based access for `admin`, `faculty`, `student`, and `parent` users.
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-Backend-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![JWT](https://img.shields.io/badge/Auth-JWT-D63AFF)](https://jwt.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Skismail57/AI-Powered-Student-Management-System?style=social)](https://github.com/Skismail57/AI-Powered-Student-Management-System)
 
-It includes dashboards, attendance tracking, curriculum management, GPA & predictive analytics, notifications, reports, and mobile-friendly login support.
+A full-stack academic management platform for educational institutions with dedicated portals for `admin`, `faculty`, `student`, and `parent` users. The system combines student administration, attendance, curriculum workflows, GPA tracking, analytics, notifications, reports, and AI-assisted academic insights in one project.
 
----
+## Overview
 
-## Key Features
+This project is designed as a practical educational ERP-style system with modern full-stack features. It helps institutions manage academic data while giving each user role a focused dashboard and workflow.
 
-- Role-based authentication and JWT security
-- Admin, faculty, student, and parent portals
-- Student attendance tracking and history
-- Curriculum and OBE support with departments, semesters, and subjects
-- GPA tracking, grade entry, and performance prediction
-- Parent alerts, daily summaries, and notification center
-- Export reports as CSV, XLSX, and PDF
-- Dashboard analytics, monitoring, and backup management
-- Responsive and mobile-friendly login interface
+### Core Highlights
 
----
+- Role-based authentication with secure password hashing and JWT tokens
+- Admin, faculty, student, and parent portals with tailored navigation
+- Student attendance management, history tracking, and alerts
+- Curriculum, OBE, departments, semesters, and subject management
+- GPA, grade entry, academic audit, and performance prediction
+- Notifications, messaging, parent summaries, and engagement tools
+- CSV, XLSX, and PDF report exports
+- Monitoring, background jobs, and backup management
+- Responsive UI with mobile-friendly login and dashboard screens
+
+## Feature Breakdown
+
+### User Roles
+
+- **Admin**: manages institutions, departments, subjects, users, reports, monitoring, and backups
+- **Faculty**: manages students, attendance, grades, assignments, class analytics, and teaching tools
+- **Student**: views dashboard metrics, curriculum, study materials, progress, quizzes, and recommendations
+- **Parent**: tracks attendance, student performance, notifications, and daily academic summaries
+
+### Academic Modules
+
+- Student profile and attendance tracking
+- Curriculum and OBE support
+- GPA, credits, grades, and academic audit
+- Timetable and academic calendar utilities
+- Assignment, quiz, and learning progress tools
+
+### Smart and Analytics Features
+
+- Predictive marks estimation
+- Explainable academic insights
+- Risk-based student monitoring
+- Dashboard analytics and recommendations
+- Global search and engagement features
+
+## Screenshots
+
+### Entry and Access
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20161649.png" alt="Login screen" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20162556.png" alt="Portal selection overview" width="49%" />
+</p>
+
+### Admin Portal
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20161141.png" alt="Admin dashboard overview" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20161243.png" alt="Admin departments management" width="49%" />
+</p>
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20161256.png" alt="Admin subject catalog" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20161326.png" alt="Admin students management" width="49%" />
+</p>
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20161314.png" alt="Admin faculty management" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20161342.png" alt="Admin reports and analytics" width="49%" />
+</p>
+
+### Faculty Portal
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20162100.png" alt="Faculty portal overview" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20162111.png" alt="Faculty attendance management" width="49%" />
+</p>
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20162120.png" alt="Faculty grading portal" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20162130.png" alt="Faculty research section" width="49%" />
+</p>
+
+### Student Portal
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20182911.png" alt="Student dashboard" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20182923.png" alt="Student risk and attendance insight" width="49%" />
+</p>
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20182935.png" alt="Student curriculum and OBE" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20182946.png" alt="Student timetable" width="49%" />
+</p>
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20183055.png" alt="Student faculty profiles" width="49%" />
+  <img src="Github%20images/Screenshot%202026-06-03%20183159.png" alt="Student AI campus advisor" width="49%" />
+</p>
+
+### Parent Portal
+
+<p align="center">
+  <img src="Github%20images/Screenshot%202026-06-03%20183956.png" alt="Parent portal dashboard" width="100%" />
+</p>
 
 ## Tech Stack
 
-- Backend: `Python`, `Flask`, `Flask-CORS`, `Flask-SocketIO`
-- Database: `SQLite` (local demo) / compatible with MySQL via config
-- Frontend: `HTML`, `CSS`, `JavaScript`
-- Reporting: `openpyxl`, `reportlab`
-- Security: `werkzeug.security` password hashing
-- Auth: JSON Web Tokens (JWT)
+### Backend
 
----
+- `Python`
+- `Flask`
+- `Flask-CORS`
+- `Flask-SocketIO`
+- `Flask-Mail`
+- `PyJWT`
+- `Werkzeug`
 
-## Repository Structure
+### Frontend
 
-- `backend/`
-  - `app.py` — main Flask backend and REST API server
-  - `db.py` — database connection helper
-  - `setup_db.py` — local SQLite database schema setup
-  - `setup_admin.py` — create the default admin user
-  - `seed_data.py` — seed demo users and academic data
-  - `API_DOCS.md` — backend API reference
-  - `routes/` — modular API route blueprints
-  - `tests/` — backend tests
-- `frontend/`
-  - `login.html` — login and registration UI
-  - `admin.html`, `faculty.html`, `student.html`, `parent.html` — portals
-  - `css/style.css` — shared frontend styles
-  - `js/` — client-side application logic
-- `database/`
-  - `schema.sql` — SQL schema for relational database setup
-- Root files
-  - `README.md` — project documentation
-  - `requirements.txt` — Python dependencies
+- `HTML`
+- `CSS`
+- `JavaScript`
 
----
+### Data and Reporting
+
+- `SQLite` for local/demo use
+- MySQL-compatible configuration support
+- `openpyxl` for spreadsheet export
+- `reportlab` for PDF report generation
+
+### Testing and ML Utilities
+
+- `pytest`
+- `numpy`
+- `scikit-learn`
+
+## Project Structure Overview
+
+```text
+AI-Powered-Student-Management-System/
+|-- backend/
+|   |-- app.py                  # Main Flask application and API entry point
+|   |-- db.py                   # Database connection utilities
+|   |-- config.py               # Environment and app configuration
+|   |-- setup_db.py             # SQLite schema/bootstrap setup
+|   |-- setup_admin.py          # Default admin creation
+|   |-- seed_data.py            # Demo data seeding
+|   |-- API_DOCS.md             # API reference
+|   |-- routes/                 # Modular route blueprints
+|   |-- tests/                  # Backend tests
+|   `-- model_*.py              # Prediction and domain-specific logic
+|-- frontend/
+|   |-- login.html              # Login and registration interface
+|   |-- admin.html              # Admin portal
+|   |-- faculty.html            # Faculty portal
+|   |-- student.html            # Student portal
+|   |-- parent.html             # Parent portal
+|   |-- audit.html              # Audit and tracking page
+|   |-- engagement.html         # Engagement analytics UI
+|   |-- search.html             # Global search interface
+|   |-- notifications.html      # Notifications center
+|   |-- messages.html           # Messaging UI
+|   |-- css/                    # Shared styles
+|   |-- js/                     # Client-side logic
+|   `-- uploads/                # Frontend-uploaded assets
+|-- database/
+|   `-- schema.sql              # Relational schema definition
+|-- Github images/              # README screenshots and gallery assets
+|-- README.md                   # Project documentation
+|-- LICENSE                     # MIT license
+|-- CONTRIBUTING.md             # Contribution notes
+`-- pytest.ini                  # Test configuration
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- `pip` package manager
-- Optional: `MySQL` if you want to run with MySQL instead of SQLite
+- Python `3.8+`
+- `pip`
+- Optional `MySQL` if you want to run beyond the local SQLite setup
 
-### Install dependencies
+### Installation
 
 ```bash
-cd backend
+git clone https://github.com/Skismail57/AI-Powered-Student-Management-System.git
+cd AI-Powered-Student-Management-System/backend
 python -m pip install -r requirements.txt
 ```
 
-### Initialize the database
+### Initialize the Database
 
 For a quick local demo:
 
 ```bash
-cd backend
 python setup_db.py
 python setup_admin.py
 python seed_data.py
 ```
 
-> `setup_db.py` creates the local SQLite database and required tables.
-> `setup_admin.py` creates the default admin account.
-> `seed_data.py` inserts demo users, students, parents, faculty, departments, subjects, and sample records.
+What these scripts do:
 
-### Run the backend server
+- `setup_db.py` creates the local SQLite database and required tables
+- `setup_admin.py` creates the default admin account
+- `seed_data.py` inserts demo users, students, faculty, parents, departments, subjects, and sample academic records
+
+### Run the Backend
 
 ```bash
-cd backend
 python app.py
 ```
 
-The backend runs at:
+Backend URL:
 
 - `http://127.0.0.1:5000`
 
-### Open the frontend
+### Open the Frontend
 
-Open `frontend/login.html` in your browser, or serve the `frontend/` directory with a static file server.
-
----
+Open `frontend/login.html` in your browser, or serve the `frontend/` directory with any static file server.
 
 ## Demo Credentials
 
-- **Admin**
-  - Mobile: `1234567890`
-  - Password: `admin123`
-- **Faculty**
-  - `Dr. Ramesh Babu` — Mobile: `9876543210`, Password: `password123`
-  - `Dr. Sneha Kulkarni` — Mobile: `9876543211`, Password: `password123`
-  - `Prof. Ananth Kumar` — Mobile: `9876543212`, Password: `password123`
-- **Student**
-  - `Demo CSE Student` — Mobile: `9999999999`, Password: `password123`
-  - `Demo Medical Student` — Mobile: `8888888888`, Password: `password123`
-- **Parent**
-  - `Demo Parent` — Mobile: `7777777777`, Password: `parent123`
-
----
+| Role | User | Mobile | Password |
+|------|------|--------|----------|
+| Admin | Default Admin | `1234567890` | `admin123` |
+| Faculty | Dr. Ramesh Babu | `9876543210` | `password123` |
+| Faculty | Dr. Sneha Kulkarni | `9876543211` | `password123` |
+| Faculty | Prof. Ananth Kumar | `9876543212` | `password123` |
+| Student | Demo CSE Student | `9999999999` | `password123` |
+| Student | Demo Medical Student | `8888888888` | `password123` |
+| Parent | Demo Parent | `7777777777` | `parent123` |
 
 ## API Documentation
 
-See `backend/API_DOCS.md` for full API details, including authentication, student management, attendance, dashboard analytics, report exports, backup endpoints, and master data management.
+Full API details are available in `backend/API_DOCS.md`, including:
 
----
+- Authentication and token refresh
+- Student and attendance management
+- Dashboard analytics and reporting
+- Prediction and explainable AI endpoints
+- GPA, curriculum, and master data endpoints
+- Monitoring, jobs, and backup operations
+
+## Why This Project Stands Out
+
+- Combines classic student management with analytics and AI-assisted features
+- Covers multiple real-world academic workflows in one repository
+- Demonstrates role-based architecture across frontend and backend
+- Includes reporting, monitoring, and operational tooling beyond CRUD
+- Works well as a portfolio, academic, or final-year showcase project
 
 ## Notes
 
-- This project is intended as a demo and learning application.
-- The default local setup uses SQLite, but the architecture supports MySQL via configuration.
-- Passwords are hashed using `werkzeug.security` before storage.
-
----
+- This project is intended as a demo and learning application
+- The default local setup uses SQLite, but the architecture can be adapted for MySQL
+- Passwords are hashed before storage using `werkzeug.security`
 
 ## License
 
-This project is released under the [MIT License](https://opensource.org/licenses/MIT).
-
-If you want to use a different license, update this section accordingly.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
