@@ -1,4 +1,3 @@
-
 # AI-Powered Student Management System
 
 A full-stack student management platform built for educational institutions with role-based access for `admin`, `faculty`, `student`, and `parent` users.
