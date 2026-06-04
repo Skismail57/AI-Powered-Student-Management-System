@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parent Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --bg-light: #fdfaf6;
+            --text-main: #451a03;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --border-color: #fde68a;
+            --accent-glow: rgba(245, 158, 11, 0.1);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--text-main); 
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.6rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .nav-link {
+            transition: all 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background-color: var(--accent-glow);
+            color: var(--primary-dark);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-7xl mx-auto px-6 py-10">
+        <header class="flex flex-wrap items-center justify-between gap-6 mb-12 bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-200">
+                    <i class="fas fa-users-cog text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight text-amber-900">Parent Portal</h1>
+                    <p class="text-sm text-amber-600 font-medium">Monitoring academic excellence</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <button onclick="toggleNotificationsPanel()" class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition flex items-center justify-center">
+                        <i class="fas fa-bell"></i>
+                        <span id="notifBadge" class="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full border-2 border-white">0</span>
+                    </button>
+                    <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-white border border-amber-100 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        <div class="p-4 border-b border-amber-50 bg-amber-50/30 flex items-center justify-between">
+                            <p class="font-bold text-amber-900 text-sm">Notifications</p>
+                            <button onclick="markAllNotificationsRead()" class="text-[10px] font-bold text-amber-600 uppercase tracking-widest hover:text-amber-800">Clear all</button>
+                        </div>
+                        <div id="notifList" class="max-h-80 overflow-y-auto">
+                            <p class="p-6 text-center text-amber-400 text-xs italic">Loading updates...</p>
+                        </div>
+                    </div>
+                </div>
+                <nav class="hidden md:flex items-center gap-1">
+                    <a href="search.html" class="nav-link">Search</a>
+                    <a href="messages.html" class="nav-link">Messages</a>
+                </nav>
+                <button onclick="logout()" class="ml-2 px-4 py-2 rounded-xl bg-rose-50 text-rose-600 font-bold text-sm hover:bg-rose-100 transition">Logout</button>
+            </div>
+        </header>
+
+        <div id="metaCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"></div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <section class="card">
+                    <h2 class="text-lg font-bold text-amber-900 mb-6 flex items-center">
+                        <i class="fas fa-chart-line mr-3 text-amber-500"></i> Attendance Trend
+                    </h2>
+                    <div class="h-64">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </section>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <section class="card">
+                        <h2 class="text-lg font-bold text-amber-900 mb-4">Risk Alerts</h2>
+                        <ul id="alertsList" class="space-y-3"></ul>
+                    </section>
+                    <section class="card">
+                        <h2 class="text-lg font-bold text-amber-900 mb-4">Daily Activity</h2>
+                        <div id="dailyActivityRows" class="space-y-2"></div>
+                    </section>
+                </div>
+
+                <section class="card">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-bold text-amber-900">Parent-Faculty Meeting</h2>
+                        <button onclick="loadMeetings()" class="text-xs font-bold text-amber-500 uppercase hover:underline">Refresh</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <input id="meetingFacultyId" class="form-input border-amber-100 bg-amber-50/30 rounded-xl p-3 text-sm focus:ring-amber-500" placeholder="Faculty ID" />
+                        <input id="meetingTime" class="form-input border-amber-100 bg-amber-50/30 rounded-xl p-3 text-sm md:col-span-2" placeholder="Preferred Time (e.g. Mon 4PM)" />
+                    </div>
+                    <textarea id="meetingNote" class="w-full border-amber-100 bg-amber-50/30 rounded-xl p-3 text-sm mb-4" rows="2" placeholder="Agenda for meeting..."></textarea>
+                    <button onclick="requestMeeting()" class="btn-primary w-full shadow-lg shadow-amber-200">Schedule Request</button>
+                    <div id="meetingsList" class="mt-8 space-y-3"></div>
+                </section>
+            </div>
+
+            <aside class="space-y-8">
+                <section class="card bg-amber-900 text-white border-none shadow-xl shadow-amber-200">
+                    <h2 class="text-lg font-bold mb-4 opacity-90">Notification Settings</h2>
+                    <div class="space-y-4">
+                        <label class="flex items-center justify-between p-3 bg-white/10 rounded-xl cursor-pointer hover:bg-white/20 transition">
+                            <span class="text-sm font-medium">Email Alerts</span>
+                            <input type="checkbox" id="emailNotif" onchange="saveSettings()" class="w-5 h-5 rounded-lg border-none text-amber-500 focus:ring-0">
+                        </label>
+                        <label class="flex items-center justify-between p-3 bg-white/10 rounded-xl cursor-pointer hover:bg-white/20 transition">
+                            <span class="text-sm font-medium">SMS Alerts</span>
+                            <input type="checkbox" id="smsNotif" onchange="saveSettings()" class="w-5 h-5 rounded-lg border-none text-amber-500 focus:ring-0">
+                        </label>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="text-lg font-bold text-amber-900 mb-4">Academic Insights</h2>
+                    <div id="performanceInsights" class="space-y-4">
+                        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                            <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Status</p>
+                            <p id="improvementTrend" class="text-sm font-medium text-amber-900">Analyzing data...</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 bg-white border border-amber-50 rounded-xl">
+                                <p class="text-[9px] font-bold text-amber-400 uppercase">Class Avg</p>
+                                <p id="classAvgAtt" class="text-lg font-black text-amber-900">--%</p>
+                            </div>
+                            <div class="p-3 bg-white border border-amber-50 rounded-xl">
+                                <p class="text-[9px] font-bold text-amber-400 uppercase">Study Avg</p>
+                                <p id="classAvgStudy" class="text-lg font-black text-amber-900">--h</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const API = 'http://localhost:5000';
+        const socket = io(API);
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token || user.role !== 'parent') {
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadParentDashboard();
+            loadNotifications();
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function openSearchPreset(query) {
+            window.location.href = `search.html?q=${encodeURIComponent(query || '')}`;
+        }
+
+        function toggleNotificationsPanel() {
+            const panel = document.getElementById('notifPanel');
+            if (!panel) return;
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) loadNotifications();
+        }
+
+        async function loadNotifications() {
+            const listEl = document.getElementById('notifList');
+            const badgeEl = document.getElementById('notifBadge');
+            if (!listEl || !badgeEl) return;
+            try {
+                const res = await fetch(`${API}/notifications/me?limit=20`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    listEl.innerHTML = `<p class="p-3 text-red-400">${data.message || 'Failed to load notifications'}</p>`;
+                    return;
+                }
+                const items = data.items || [];
+                const unread = items.filter(n => Number(n.is_read || 0) === 0).length;
+                badgeEl.textContent = String(unread);
+                badgeEl.style.display = unread > 0 ? 'inline-block' : 'none';
+                listEl.innerHTML = items.length ? items.map(n => `
+                    <div class="p-3 border-b border-slate-800 ${Number(n.is_read || 0) === 0 ? 'bg-slate-800' : ''}">
+                        <p class="font-medium">${n.title || 'Notification'}</p>
+                        <p class="text-xs text-slate-300">${n.message || ''}</p>
+                        <p class="text-[11px] text-slate-500 mt-1">${n.created_at || ''}</p>
+                    </div>
+                `).join('') : '<p class="p-3 text-slate-500">No notifications</p>';
+            } catch (e) {
+                listEl.innerHTML = '<p class="p-3 text-red-400">Failed to load notifications</p>';
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await fetch(`${API}/notifications/mark-read`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ all: true })
+                });
+                loadNotifications();
+            } catch (e) {
+                // no-op
+            }
+        }
+
+        function card(title, value, tone = 'indigo') {
+            const gradients = {
+                indigo: 'from-indigo-500 to-indigo-600 shadow-indigo-100',
+                emerald: 'from-emerald-500 to-emerald-600 shadow-emerald-100',
+                rose: 'from-rose-500 to-rose-600 shadow-rose-100',
+                amber: 'from-amber-500 to-amber-600 shadow-amber-100',
+                slate: 'from-slate-600 to-slate-700 shadow-slate-100'
+            };
+            const grad = gradients[tone] || gradients.indigo;
+            return `
+                <div class="bg-gradient-to-br ${grad} p-6 rounded-[2rem] shadow-xl text-white transform hover:scale-105 transition-all">
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">${title}</p>
+                    <h3 class="text-xl font-black truncate">${value}</h3>
+                </div>
+            `;
+        }
+
+        async function loadParentDashboard() {
+            try {
+                const res = await fetch(`${API}/parent/me/dashboard`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Failed to load parent dashboard');
+                    return;
+                }
+
+                const s = data.student || {};
+                document.getElementById('metaCards').innerHTML = [
+                    card('Student', `${s.name || '-'} (#${s.id || '-'})`),
+                    card('Program', `${String(s.stream || '-').toUpperCase()} | ${s.department_name || '-'}`, 'indigo'),
+                    card('Attendance', `${Number(s.attendance || 0).toFixed(1)}%`, s.attendance < 75 ? 'rose' : 'emerald'),
+                    card('Predicted Marks', `${Number(data.predicted_marks || 0).toFixed(1)}`, 'indigo'),
+                    card('Risk Score', data.risk?.score || 0, (data.risk?.score || 0) > 50 ? 'rose' : 'emerald'),
+                ].join('');
+
+                const alerts = data.alerts || [];
+                document.getElementById('alertsList').innerHTML = alerts.length
+                    ? alerts.map(a => `<li class="p-2 rounded bg-slate-800">${a.level.toUpperCase()} • ${a.reason} <span class="text-slate-500">(${a.created_at || ''})</span></li>`).join('')
+                    : '<li class="text-slate-500">No alerts</li>';
+
+                const anns = data.announcements || [];
+                document.getElementById('announcementsList').innerHTML = anns.length
+                    ? anns.map(a => `<li class="p-2 rounded bg-slate-800"><div class="font-medium">${a.title || 'Announcement'}</div><div>${a.content || ''}</div></li>`).join('')
+                    : '<li class="text-slate-500">No announcements</li>';
+
+                const attendance = data.attendance_history || [];
+                document.getElementById('attendanceRows').innerHTML = attendance.length
+                    ? attendance.map(r => `<div class="flex justify-between p-2 border-b border-slate-800"><span>${r.date || '-'}</span><span class="${r.status === 'present' ? 'text-emerald-400' : 'text-rose-400'}">${r.status}</span><span class="text-slate-400">${r.reason || ''}</span></div>`).join('')
+                    : '<div class="text-slate-500">No attendance records</div>';
+
+                const dailyActivity = data.daily_activity || [];
+                document.getElementById('dailyActivityRows').innerHTML = dailyActivity.length
+                    ? dailyActivity.map(r => `<div class="flex justify-between p-2 border-b border-slate-800"><span>${r.day || '-'}</span><span class="text-cyan-300">${r.minutes || 0} min</span></div>`).join('')
+                    : '<div class="text-slate-500">No recent study activity</div>';
+
+                const plan = data.latest_study_plan || null;
+                let parsedSchedule = [];
+                try {
+                    parsedSchedule = plan?.schedule_json ? JSON.parse(plan.schedule_json) : [];
+                } catch (e) {
+                    parsedSchedule = [];
+                }
+                document.getElementById('latestPlanRows').innerHTML = plan
+                    ? `
+                        <p class="text-xs text-slate-400 mb-2">Exam: ${plan.exam_date || '-'} • Hours/day: ${plan.available_hours || '-'} • Weak: ${plan.weak_subjects || '-'}</p>
+                        ${(parsedSchedule || []).slice(0, 5).map(d => `
+                            <div class="p-2 border-b border-slate-800">
+                                <p class="font-semibold">${d.day || '-'} • ${d.focus_subject || ''}</p>
+                            </div>
+                        `).join('') || '<p class="text-slate-500">No schedule rows</p>'}
+                    `
+                    : '<div class="text-slate-500">No AI study plan generated yet</div>';
+
+                const labels = attendance.slice().reverse().map(a => a.date || '');
+                const values = attendance.slice().reverse().map(a => a.status === 'present' ? 100 : 0);
+                new Chart(document.getElementById('attendanceChart'), {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{ label: 'Attendance Status', data: values, borderColor: '#22c55e', tension: 0.3 }]
+                    },
+                    options: {
+                        scales: { y: { min: 0, max: 100 } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // Load Phase 4 Features
+                loadSettings();
+                loadInsights();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/parent/notification-settings`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                document.getElementById('emailNotif').checked = data.email_enabled;
+                document.getElementById('smsNotif').checked = data.sms_enabled;
+                document.getElementById('appNotif').checked = data.app_enabled;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveSettings() {
+            const email = document.getElementById('emailNotif').checked;
+            const sms = document.getElementById('smsNotif').checked;
+            const app = document.getElementById('appNotif').checked;
+            
+            try {
+                await fetch(`${API}/parent/notification-settings`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, sms, app })
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadInsights() {
+            try {
+                const res = await fetch(`${API}/parent/performance-insights`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                document.getElementById('improvementTrend').textContent = data.improvement_trend;
+                document.getElementById('classAvgAtt').textContent = `${Math.round(data.class_comparison?.avg_att || 0)}%`;
+                document.getElementById('classAvgStudy').textContent = `${Math.round(data.class_comparison?.avg_study || 0)}h`;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadParentDailySummary() {
+            const todayEl = document.getElementById('parentDailyToday');
+            const histEl = document.getElementById('parentDailyHistory');
+            if (!todayEl || !histEl) return;
+            try {
+                const res = await fetch(`${API}/parent/daily-summary`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    todayEl.textContent = data.message || 'Failed to load daily summary';
+                    histEl.innerHTML = '';
+                    return;
+                }
+                todayEl.textContent = data.today?.summary_text || 'No summary available';
+                const items = data.items || [];
+                histEl.innerHTML = items.length
+                    ? items.map(i => `<p>• ${i.summary_date}: ${i.summary_text}</p>`).join('')
+                    : '<p>No summary history yet.</p>';
+            } catch (e) {
+                todayEl.textContent = 'Failed to load daily summary';
+                histEl.innerHTML = '';
+            }
+        }
+
+        async function requestMeeting() {
+            const faculty_id = Number(document.getElementById('meetingFacultyId')?.value || 0);
+            const date = (document.getElementById('meetingTime')?.value || '').trim();
+            const purpose = (document.getElementById('meetingNote')?.value || '').trim();
+            if (!faculty_id || !date || !purpose) {
+                alert('Faculty ID, date and purpose are required.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ faculty_id, date, purpose })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Failed to request appointment');
+                    return;
+                }
+                document.getElementById('meetingFacultyId').value = '';
+                document.getElementById('meetingTime').value = '';
+                document.getElementById('meetingNote').value = '';
+                loadMeetings();
+            } catch (e) {
+                alert('Failed to request appointment');
+            }
+        }
+
+        async function loadMeetings() {
+            const wrap = document.getElementById('meetingsList');
+            if (!wrap) return;
+            try {
+                const res = await fetch(`${API}/appointments`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    wrap.innerHTML = `<p>${data.message || 'Failed to load appointments'}</p>`;
+                    return;
+                }
+                const items = data.items || [];
+                wrap.innerHTML = items.length ? items.map(m => `
+                    <div class="p-2 border border-slate-700 rounded bg-slate-800">
+                        <p class="font-semibold">Faculty: ${m.faculty_name}</p>
+                        <p class="text-xs text-slate-400">Date: ${new Date(m.preferred_date).toLocaleDateString()} • Purpose: ${m.purpose}</p>
+                        <p class="text-xs ${m.status === 'approved' ? 'text-emerald-400' : m.status === 'cancelled' ? 'text-rose-400' : 'text-amber-300'}">Status: ${String(m.status || '').toUpperCase()}</p>
+                        ${m.remarks ? `<p class="text-[10px] text-slate-500 mt-1 italic">Remarks: ${m.remarks}</p>` : ''}
+                    </div>
+                `).join('') : '<p>No appointments requested yet.</p>';
+            } catch (e) {
+                wrap.innerHTML = '<p>Failed to load appointments.</p>';
+            }
+        }
+
+        loadParentDashboard();
+        loadParentDailySummary();
+        loadMeetings();
+        loadNotifications();
+        socket.on('notification_push', loadNotifications);
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Global Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Universal Search</h1>
+            <button onclick="goBack()" class="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm">Back</button>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-4">
+            <div class="flex gap-2">
+                <input id="q" class="flex-1 px-3 py-2 rounded bg-slate-800 border border-slate-700" placeholder="Search students, assignments, resources..." />
+                <button onclick="runSearch()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500">Search</button>
+            </div>
+        </div>
+        <div id="results" class="grid md:grid-cols-2 gap-4"></div>
+    </div>
+    <script>
+        const API = 'http://localhost:5000';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!token) window.location.href = 'login.html';
+
+        function goBack() {
+            const role = user.role;
+            if (role === 'admin') return window.location.href = 'admin.html';
+            if (role === 'faculty') return window.location.href = 'faculty.html';
+            if (role === 'student') return window.location.href = 'student.html';
+            if (role === 'parent') return window.location.href = 'parent.html';
+            window.location.href = 'login.html';
+        }
+
+        function renderSection(title, items, formatter) {
+            return `<section class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+                <h2 class="font-semibold mb-3">${title} (${items.length})</h2>
+                <div class="space-y-2 text-sm">${items.length ? items.map(formatter).join('') : '<p class="text-slate-400">No matches</p>'}</div>
+            </section>`;
+        }
+
+        async function runSearch() {
+            const q = document.getElementById('q').value.trim();
+            if (!q) return;
+            const results = document.getElementById('results');
+            results.innerHTML = '<p class="text-slate-400">Searching...</p>';
+            try {
+                const res = await fetch(`${API}/search/global?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                if (!res.ok) {
+                    results.innerHTML = `<p class="text-red-300">${data.message || 'Search failed'}</p>`;
+                    return;
+                }
+                results.innerHTML = [
+                    renderSection('Students', data.students || [], x => `<div class="p-2 rounded bg-slate-800">${x.id} - ${x.name} <span class="text-slate-400">(attendance ${x.attendance ?? 'n/a'})</span></div>`),
+                    renderSection('Assignments', data.assignments || [], x => `<div class="p-2 rounded bg-slate-800">${x.id} - ${x.title} <span class="text-slate-400">(${x.due_date || 'no due date'})</span></div>`),
+                    renderSection('Resources', data.resources || [], x => `<div class="p-2 rounded bg-slate-800">${x.subject} - ${x.title} <span class="text-slate-400">(${x.resource_type})</span></div>`),
+                    renderSection('Class Plans', data.class_plans || [], x => `<div class="p-2 rounded bg-slate-800">${x.class_name} - ${x.subject} <span class="text-slate-400">(${x.status || 'planned'})</span></div>`),
+                    renderSection('Users', data.users || [], x => `<div class="p-2 rounded bg-slate-800">${x.id} - ${x.name} <span class="text-slate-400">(${x.role})</span></div>`)
+                ].join('');
+            } catch (e) {
+                results.innerHTML = '<p class="text-red-300">Search failed</p>';
+            }
+        }
+
+        function tryAutoSearchFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const q = (params.get('q') || '').trim();
+            if (!q) return;
+            document.getElementById('q').value = q;
+            runSearch();
+        }
+
+        tryAutoSearchFromUrl();
+    </script>
+</body>
+</html>

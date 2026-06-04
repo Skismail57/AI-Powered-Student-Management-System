@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System - Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --very-light-blue: #dbeafe;
+            --dark-blue: #1e3a8a;
+            --white: #ffffff;
+            --gray-light: #f3f4f6;
+            --gray-medium: #9ca3af;
+            --gray-dark: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--gray-light);
+            color: var(--gray-dark);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .card-shadow:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .sidebar-item {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--light-blue);
+        }
+
+        .sidebar-item.active {
+            background-color: rgba(59, 130, 246, 0.15);
+            border-left-color: var(--light-blue);
+            color: var(--primary-blue);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chatbot-bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-bubble:hover {
+            transform: scale(1.1);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+
+        .chatbot-input {
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .chatbot-input button {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background: var(--light-blue);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-input button:hover {
+            background: var(--primary-blue);
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+
+        .message.bot {
+            background: #e5e7eb;
+            align-self: flex-start;
+        }
+
+        .message.user {
+            background: var(--light-blue);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-radius: 0 0 0 100px;
+        }
+
+        .department-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .department-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--light-blue);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .department-card:hover::after {
+            transform: scaleY(1);
+        }
+
+        .department-card:hover {
+            transform: translateX(5px);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--light-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .close-modal:hover {
+            color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 100;
+                height: 100%;
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <button class="menu-toggle text-white" onclick="toggleSidebar()">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-graduation-cap text-3xl"></i>
+                    <h1 class="text-2xl font-bold">Student Management System</h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="font-semibold">S K Ismail</p>
+                    <p class="text-sm opacity-90">Administrator</p>
+                </div>
+                <img src="https://picsum.photos/seed/admin/50/50" alt="Admin" class="w-12 h-12 rounded-full border-2 border-white">
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 bg-white shadow-lg min-h-screen">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" onclick="showSection('dashboard')" class="sidebar-item active flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-tachometer-alt w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('departments')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-building w-5"></i>
+                            <span>Departments</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('students')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-users w-5"></i>
+                            <span>Students</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('courses')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-book w-5"></i>
+                            <span>Courses</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('faculty')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-chalkboard-teacher w-5"></i>
+                            <span>Faculty</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('reports')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-chart-bar w-5"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="showSection('settings')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section fade-in">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Dashboard Overview</h2>
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stats-card card-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Students</p>
+                                <p class="text-3xl font-bold text-blue-600">2,845</p>
+                                <p class="text-sm text-green-500 mt-1">
+                                    <i class="fas fa-arrow-up"></i> 12% from last month
+                                </p>
+                            </div>
+                            <div class="text-4xl text-blue-200">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Departments</p>
+                                <p class="text-3xl font-bold text-blue-600">10</p>
+                                <p class="text-sm text-green-500 mt-1">
+                                    <i class="fas fa-check"></i> All active
+                                </p>
+                            </div>
+                            <div class="text-4xl text-blue-200">
+                                <i class="fas fa-building"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Courses</p>
+                                <p class="text-3xl font-bold text-blue-600">156</p>
+                                <p class="text-sm text-green-500 mt-1">
+                                    <i class="fas fa-arrow-up"></i> 8 new this semester
+                                </p>
+                            </div>
+                            <div class="text-4xl text-blue-200">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Faculty Members</p>
+                                <p class="text-3xl font-bold text-blue-600">124</p>
+                                <p class="text-sm text-green-500 mt-1">
+                                    <i class="fas fa-arrow-up"></i> 5 new hires
+                                </p>
+                            </div>
+                            <div class="text-4xl text-blue-200">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-xl font-semibold mb-4">Recent Activities</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-plus text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium">New student registered</p>
+                                <p class="text-sm text-gray-500">John Doe - Computer Science Engineering</p>
+                            </div>
+                            <span class="text-sm text-gray-400">2 min ago</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-file-alt text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium">Course updated</p>
+                                <p class="text-sm text-gray-500">Machine Learning Fundamentals - AI & ML Dept</p>
+                            </div>
+                            <span class="text-sm text-gray-400">1 hour ago</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-tie text-purple-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium">New faculty joined</p>
+                                <p class="text-sm text-gray-500">Dr. Sarah Johnson - Pharmacy Department</p>
+                            </div>
+                            <span class="text-sm text-gray-400">3 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Distribution -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-4">Department Distribution</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">425</p>
+                            <p class="text-sm text-gray-600">AI & ML</p>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">380</p>
+                            <p class="text-sm text-gray-600">Computer Science</p>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">320</p>
+                            <p class="text-sm text-gray-600">Information Science</p>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">290</p>
+                            <p class="text-sm text-gray-600">Civil Engineering</p>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">260</p>
+                            <p class="text-sm text-gray-600">Electrical & Electronics</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Departments Section -->
+            <section id="departments" class="content-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Departments</h2>
+                    <button class="btn-primary" onclick="openModal('addDepartmentModal')">
+                        <i class="fas fa-plus mr-2"></i>Add Department
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Engineering Departments -->
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('ai-ml')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-robot text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">425 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Artificial Intelligence & Machine Learning Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Advanced AI and ML technologies, neural networks, deep learning</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>15 Courses</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('cse')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-laptop-code text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">380 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Computer Science Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Programming, algorithms, software development, computer systems</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>18 Courses</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('ise')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-database text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">320 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Information Science Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Data management, information systems, web technologies</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>16 Courses</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('civil')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-building text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">290 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Civil Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Construction, infrastructure, structural design, urban planning</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>14 Courses</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('eee')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bolt text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">260 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Electrical & Electronics Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Power systems, electronics, control systems, telecommunications</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>17 Courses</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('mechanical')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cogs text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">240 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Mechanical Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Thermodynamics, manufacturing, machine design, robotics</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>16 Courses</span>
+                        </div>
+                    </div>
+
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('automobile')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-car text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">180 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Automobile Engineering</h3>
+                        <p class="text-sm text-gray-600 mb-3">Vehicle design, automotive systems, engine technology</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>13 Courses</span>
+                        </div>
+                    </div>
+
+                    <!-- Pharmacy Department -->
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('pharmacy')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-pills text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">220 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Pharmacy</h3>
+                        <p class="text-sm text-gray-600 mb-3">Pharmaceutical sciences, drug development, clinical pharmacy</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>15 Courses</span>
+                        </div>
+                    </div>
+
+                    <!-- Medical Department -->
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('medical')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-stethoscope text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">350 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Medical Sciences</h3>
+                        <p class="text-sm text-gray-600 mb-3">Medicine, surgery, medical research, healthcare</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>20 Courses</span>
+                        </div>
+                    </div>
+
+                    <!-- MBA Department -->
+                    <div class="department-card card-shadow" onclick="showDepartmentDetails('mba')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-briefcase text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="text-sm text-gray-500">200 Students</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Master of Business Administration</h3>
+                        <p class="text-sm text-gray-600 mb-3">Business management, finance, marketing, entrepreneurship</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-book mr-2"></i>
+                            <span>12 Courses</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Students Section -->
+            <section id="students" class="content-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Students Management</h2>
+                    <div class="flex space-x-3">
+                        <button class="btn-primary" onclick="openModal('addStudentModal')">
+                            <i class="fas fa-user-plus mr-2"></i>Add Student
+                        </button>
+                        <button class="bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-4 border-b">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+                            <div class="relative">
+                                <input type="text" placeholder="Search students..." class="form-input pl-10 w-full md:w-64">
+                                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                            </div>
+                            <select class="form-input w-full md:w-48">
+                                <option>All Departments</option>
+                                <option>AI & ML Engineering</option>
+                                <option>Computer Science Engineering</option>
+                                <option>Information Science Engineering</option>
+                                <option>Civil Engineering</option>
+                                <option>Electrical & Electronics Engineering</option>
+                                <option>Mechanical Engineering</option>
+                                <option>Automobile Engineering</option>
+                                <option>Pharmacy</option>
+                                <option>Medical Sciences</option>
+                                <option>MBA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-hover">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full" src="https://picsum.photos/seed/student1/50/50" alt="">
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">John Doe</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2021001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Computer Science Engineering</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3rd Year</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">john.doe@university.edu</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                        <button class="text-red-600 hover:text-red-900">Delete</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full" src="https://picsum.photos/seed/student2/50/50" alt="">
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Jane Smith</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">AI2021002</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">AI & ML Engineering</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2nd Year</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">jane.smith@university.edu</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                        <button class="text-red-600 hover:text-red-900">Delete</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full" src="https://picsum.photos/seed/student3/50/50" alt="">
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Mike Johnson</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CE2021003</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Civil Engineering</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">4th Year</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">mike.johnson@university.edu</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                        <button class="text-red-600 hover:text-red-900">Delete</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full" src="https://picsum.photos/seed/student4/50/50" alt="">
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Sarah Williams</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">PH2021004</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Pharmacy</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1st Year</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">sarah.williams@university.edu</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                        <button class="text-red-600 hover:text-red-900">Delete</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full" src="https://picsum.photos/seed/student5/50/50" alt="">
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Robert Brown</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">MB2021005</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">MBA</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2nd Year</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">robert.brown@university.edu</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                        <button class="text-red-600 hover:text-red-900">Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</button>
+                            <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</button>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">Showing <span class="font-medium">1</span> to <span class="font-medium">5</span> of <span class="font-medium">2845</span> results</p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Previous</button>
+                                    <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">1</button>
+                                    <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</button>
+                                    <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 hidden md:inline-flex relative items-center px-4 py-2 border text-sm font-medium">3</button>
+                                    <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Next</button>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Courses Section -->
+            <section id="courses" class="content-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Courses Management</h2>
+                    <button class="btn-primary" onclick="openModal('addCourseModal')">
+                        <i class="fas fa-plus mr-2"></i>Add Course
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                            <i class="fas fa-brain text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Machine Learning Fundamentals</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">AI & ML</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">Introduction to machine learning algorithms, supervised and unsupervised learning techniques.</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span><i class="fas fa-users mr-1"></i> 45 Students</span>
+                                <span><i class="fas fa-clock mr-1"></i> 4 Credits</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                            <i class="fas fa-code text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Data Structures & Algorithms</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">CSE</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">Fundamental data structures, algorithm design and analysis techniques.</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span><i class="fas fa-users mr-1"></i> 60 Students</span>
+                                <span><i class="fas fa-clock mr-1"></i> 4 Credits</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                            <i class="fas fa-database text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Database Management Systems</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">ISE</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">Database design, SQL, normalization, transaction management.</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span><i class="fas fa-users mr-1"></i> 55 Students</span>
+                                <span><i class="fas fa-clock mr-1"></i> 3 Credits</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                            <i class="fas fa-building text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Structural Analysis</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Civil</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">Analysis of structures, stress-strain relationships, structural design principles.</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span><i class="fas fa-users mr-1"></i> 40 Students</span>
+                                <span><i class="fas fa-clock mr-1"></i> 4 Credits</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center">
+                            <i class="fas fa-bolt text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Power Systems</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">EEE</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">Generation, transmission, and distribution of electrical power.</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span><i class="fas fa-users mr-1"></i> 35 Students</span>
+                                <span><i class="fas fa-clock mr-1"></i> 3 Credits</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                            <i class="fas fa-pills text-white text-6xl"></i>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-semibold">Pharmaceutical Chemistry</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Pharmacy</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-4">Chemical properties of drugs, drug synthesis, pharmaceutical analysis.</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span><i class="fas fa-users mr-1"></i> 50 Students</span>
+                                <span><i class="fas fa-clock mr-1"></i> 4 Credits</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Faculty Section -->
+            <section id="faculty" class="content-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Faculty Management</h2>
+                    <button class="btn-primary" onclick="openModal('addFacultyModal')">
+                        <i class="fas fa-plus mr-2"></i>Add Faculty
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                        <img src="https://picsum.photos/seed/faculty1/150/150" alt="Faculty" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-semibold">Dr. Robert Anderson</h3>
+                        <p class="text-sm text-gray-600 mb-2">Professor of Computer Science</p>
+                        <p class="text-xs text-blue-600 mb-3">Computer Science Engineering</p>
+                        <div class="flex justify-center space-x-2 text-sm text-gray-500">
+                            <span><i class="fas fa-envelope mr-1"></i> robert@university.edu</span>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                        <img src="https://picsum.photos/seed/faculty2/150/150" alt="Faculty" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-semibold">Dr. Emily Chen</h3>
+                        <p class="text-sm text-gray-600 mb-2">Associate Professor</p>
+                        <p class="text-xs text-blue-600 mb-3">AI & Machine Learning Engineering</p>
+                        <div class="flex justify-center space-x-2 text-sm text-gray-500">
+                            <span><i class="fas fa-envelope mr-1"></i> emily@university.edu</span>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                        <img src="https://picsum.photos/seed/faculty3/150/150" alt="Faculty" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-semibold">Dr. Michael Thompson</h3>
+                        <p class="text-sm text-gray-600 mb-2">Assistant Professor</p>
+                        <p class="text-xs text-blue-600 mb-3">Civil Engineering</p>
+                        <div class="flex justify-center space-x-2 text-sm text-gray-500">
+                            <span><i class="fas fa-envelope mr-1"></i> michael@university.edu</span>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                        <img src="https://picsum.photos/seed/faculty4/150/150" alt="Faculty" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-semibold">Dr. Sarah Johnson</h3>
+                        <p class="text-sm text-gray-600 mb-2">Professor of Pharmacy</p>
+                        <p class="text-xs text-blue-600 mb-3">Pharmacy</p>
+                        <div class="flex justify-center space-x-2 text-sm text-gray-500">
+                            <span><i class="fas fa-envelope mr-1"></i> sarah@university.edu</span>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                        <img src="https://picsum.photos/seed/faculty5/150/150" alt="Faculty" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-semibold">Dr. James Wilson</h3>
+                        <p class="text-sm text-gray-600 mb-2">Associate Professor</p>
+                        <p class="text-xs text-blue-600 mb-3">Electrical & Electronics Engineering</p>
+                        <div class="flex justify-center space-x-2 text-sm text-gray-500">
+                            <span><i class="fas fa-envelope mr-1"></i> james@university.edu</span>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                        <img src="https://picsum.photos/seed/faculty6/150/150" alt="Faculty" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-semibold">Dr. Lisa Anderson</h3>
+                        <p class="text-sm text-gray-600 mb-2">Professor of Business</p>
+                        <p class="text-xs text-blue-600 mb-3">MBA</p>
+                        <div class="flex justify-center space-x-2 text-sm text-gray-500">
+                            <span><i class="fas fa-envelope mr-1"></i> lisa@university.edu</span>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-3">
+                            <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Reports & Analytics</h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Student Enrollment by Department</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">AI & ML Engineering</span>
+                                    <span class="text-sm font-medium">425</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Computer Science Engineering</span>
+                                    <span class="text-sm font-medium">380</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: 76%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Information Science Engineering</span>
+                                    <span class="text-sm font-medium">320</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: 64%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Civil Engineering</span>
+                                    <span class="text-sm font-medium">290</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: 58%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Electrical & Electronics Engineering</span>
+                                    <span class="text-sm font-medium">260</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: 52%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Academic Performance</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-trophy text-green-600"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">Excellent</p>
+                                        <p class="text-xs text-gray-500">CGPA > 8.5</p>
+                                    </div>
+                                </div>
+                                <span class="text-lg font-semibold text-green-600">625</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-star text-blue-600"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">Good</p>
+                                        <p class="text-xs text-gray-500">CGPA 7.0 - 8.5</p>
+                                    </div>
+                                </div>
+                                <span class="text-lg font-semibold text-blue-600">1,245</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-exclamation text-yellow-600"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">Average</p>
+                                        <p class="text-xs text-gray-500">CGPA 6.0 - 7.0</p>
+                                    </div>
+                                </div>
+                                <span class="text-lg font-semibold text-yellow-600">750</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-times text-red-600"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">Below Average</p>
+                                        <p class="text-xs text-gray-500">CGPA < 6.0</p>
+                                    </div>
+                                </div>
+                                <span class="text-lg font-semibold text-red-600">225</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Generate Custom Report</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                            <select class="form-input">
+                                <option>Student Report</option>
+                                <option>Faculty Report</option>
+                                <option>Course Report</option>
+                                <option>Department Report</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                            <select class="form-input">
+                                <option>All Departments</option>
+                                <option>AI & ML Engineering</option>
+                                <option>Computer Science Engineering</option>
+                                <option>Information Science Engineering</option>
+                                <option>Civil Engineering</option>
+                                <option>Electrical & Electronics Engineering</option>
+                                <option>Mechanical Engineering</option>
+                                <option>Automobile Engineering</option>
+                                <option>Pharmacy</option>
+                                <option>Medical Sciences</option>
+                                <option>MBA</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+                            <select class="form-input">
+                                <option>2023-2024</option>
+                                <option>2022-2023</option>
+                                <option>2021-2022</option>
+                                <option>2020-2021</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
+                            <select class="form-input">
+                                <option>PDF</option>
+                                <option>Excel</option>
+                                <option>CSV</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <button class="btn-primary">
+                            <i class="fas fa-file-download mr-2"></i>Generate Report
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">System Settings</h2>
+
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">General Settings</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Institution Name</label>
+                            <input type="text" value="University of Technology" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+                            <input type="text" value="2023-2024" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Current Semester</label>
+                            <select class="form-input">
+                                <option>First Semester</option>
+                                <option>Second Semester</option>
+                                <option>Summer Semester</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Grading System</label>
+                            <select class="form-input">
+                                <option>10 Point CGPA</option>
+                                <option>4 Point GPA</option>
+                                <option>Percentage</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Notification Settings</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium">Email Notifications</p>
+                                <p class="text-sm text-gray-500">Receive notifications via email</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium">SMS Notifications</p>
+                                <p class="text-sm text-gray-500">Receive notifications via SMS</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium">Push Notifications</p>
+                                <p class="text-sm text-gray-500">Receive push notifications</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Backup & Restore</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Last Backup</p>
+                                <p class="text-sm text-gray-500">December 15, 2023 at 02:30 AM</p>
+                            </div>
+                            <button class="btn-primary">Backup Now</button>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-blue-800">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Automatic backups are scheduled daily at 2:00 AM
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div class="chatbot-container">
+        <div class="chatbot-bubble" onclick="toggleChatbot()">
+            <i class="fas fa-robot text-white text-2xl"></i>
+        </div>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <i class="fas fa-robot mr-2"></i>AI Assistant
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot">
+                    Hello! I'm your AI assistant. How can I help you with the Student Management System today?
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Type your message..." onkeypress="handleChatbotInput(event)">
+                <button onclick="sendChatbotMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Department Modal -->
+    <div id="addDepartmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('addDepartmentModal')">&times;</span>
+            <h2 class="text-2xl font-bold mb-4">Add New Department</h2>
+            <form onsubmit="addDepartment(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department Name</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department Code</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Head of Department</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea class="form-input" rows="3"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="closeModal('addDepartmentModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('addStudentModal')">&times;</span>
+            <h2 class="text-2xl font-bold mb-4">Add New Student</h2>
+            <form onsubmit="addStudent(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                        <select class="form-input" required>
+                            <option value="">Select Department</option>
+                            <option>AI & ML Engineering</option>
+                            <option>Computer Science Engineering</option>
+                            <option>Information Science Engineering</option>
+                            <option>Civil Engineering</option>
+                            <option>Electrical & Electronics Engineering</option>
+                            <option>Mechanical Engineering</option>
+                            <option>Automobile Engineering</option>
+                            <option>Pharmacy</option>
+                            <option>Medical Sciences</option>
+                            <option>MBA</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                        <select class="form-input" required>
+                            <option value="">Select Year</option>
+                            <option>1st Year</option>
+                            <option>2nd Year</option>
+                            <option>3rd Year</option>
+                            <option>4th Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="closeModal('addStudentModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Course Modal -->
+    <div id="addCourseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('addCourseModal')">&times;</span>
+            <h2 class="text-2xl font-bold mb-4">Add New Course</h2>
+            <form onsubmit="addCourse(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <select class="form-input" required>
+                        <option value="">Select Department</option>
+                        <option>AI & ML Engineering</option>
+                        <option>Computer Science Engineering</option>
+                        <option>Information Science Engineering</option>
+                        <option>Civil Engineering</option>
+                        <option>Electrical & Electronics Engineering</option>
+                        <option>Mechanical Engineering</option>
+                        <option>Automobile Engineering</option>
+                        <option>Pharmacy</option>
+                        <option>Medical Sciences</option>
+                        <option>MBA</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Credits</label>
+                        <input type="number" class="form-input" min="1" max="6" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                        <select class="form-input" required>
+                            <option value="">Select Semester</option>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea class="form-input" rows="3"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="closeModal('addCourseModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Faculty Modal -->
+    <div id="addFacultyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('addFacultyModal')">&times;</span>
+            <h2 class="text-2xl font-bold mb-4">Add New Faculty</h2>
+            <form onsubmit="addFaculty(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" class="form-input" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                        <select class="form-input" required>
+                            <option value="">Select Department</option>
+                            <option>AI & ML Engineering</option>
+                            <option>Computer Science Engineering</option>
+                            <option>Information Science Engineering</option>
+                            <option>Civil Engineering</option>
+                            <option>Electrical & Electronics Engineering</option>
+                            <option>Mechanical Engineering</option>
+                            <option>Automobile Engineering</option>
+                            <option>Pharmacy</option>
+                            <option>Medical Sciences</option>
+                            <option>MBA</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                        <select class="form-input" required>
+                            <option value="">Select Position</option>
+                            <option>Professor</option>
+                            <option>Associate Professor</option>
+                            <option>Assistant Professor</option>
+                            <option>Lecturer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="closeModal('addFacultyModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Faculty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Show section
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Show selected section
+            const selectedSection = document.getElementById(sectionId);
+            selectedSection.classList.remove('hidden');
+            selectedSection.classList.add('fade-in');
+
+            // Update sidebar active state
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.sidebar-item').classList.add('active');
+
+            // Close sidebar on mobile after selection
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        // Toggle chatbot
+        function toggleChatbot() {
+            const chatbotWindow = document.getElementById('chatbotWindow');
+            chatbotWindow.style.display = chatbotWindow.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // Send chatbot message
+        function sendChatbotMessage() {
+            const input = document.getElementById('chatbotInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                const messagesContainer = document.getElementById('chatbotMessages');
+                
+                // Add user message
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user';
+                userMessage.textContent = message;
+                messagesContainer.appendChild(userMessage);
+                
+                // Clear input
+                input.value = '';
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot';
+                    
+                    // Simple response logic
+                    let response = "I'm here to help! Could you please provide more details?";
+                    
+                    if (message.toLowerCase().includes('student')) {
+                        response = "I can help you with student-related queries. You can add, edit, or view student information in the Students section.";
+                    } else if (message.toLowerCase().includes('department')) {
+                        response = "For department management, please visit the Departments section where you can view all departments and their details.";
+                    } else if (message.toLowerCase().includes('course')) {
+                        response = "Course information is available in the Courses section. You can manage courses there.";
+                    } else if (message.toLowerCase().includes('faculty')) {
+                        response = "Faculty management is available in the Faculty section. You can add or view faculty members there.";
+                    } else if (message.toLowerCase().includes('report')) {
+                        response = "You can generate various reports in the Reports & Analytics section. Custom reports are also available.";
+                    }
+                    
+                    botMessage.textContent = response;
+                    messagesContainer.appendChild(botMessage);
+                    
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 1000);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        // Handle chatbot input enter key
+        function handleChatbotInput(event) {
+            if (event.key === 'Enter') {
+                sendChatbotMessage();
+            }
+        }
+
+        // Open modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Add department
+        function addDepartment(event) {
+            event.preventDefault();
+            // Here you would normally send data to server
+            alert('Department added successfully!');
+            closeModal('addDepartmentModal');
+        }
+
+        // Add student
+        function addStudent(event) {
+            event.preventDefault();
+            // Here you would normally send data to server
+            alert('Student added successfully!');
+            closeModal('addStudentModal');
+        }
+
+        // Add course
+        function addCourse(event) {
+            event.preventDefault();
+            // Here you would normally send data to server
+            alert('Course added successfully!');
+            closeModal('addCourseModal');
+        }
+
+        // Add faculty
+        function addFaculty(event) {
+            event.preventDefault();
+            // Here you would normally send data to server
+            alert('Faculty added successfully!');
+            closeModal('addFacultyModal');
+        }
+
+        // Show department details
+        function showDepartmentDetails(departmentId) {
+            // In a real application, this would navigate to a department details page
+            alert(`Showing details for department: ${departmentId}`);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

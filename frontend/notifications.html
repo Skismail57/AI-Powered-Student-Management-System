@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-5xl mx-auto p-4 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-2xl font-bold">Notification Center</h1>
+                <p class="text-sm text-slate-400">Filter and manage your alerts</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="goBack()" class="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800">Back</button>
+                <button onclick="markAllRead()" class="px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-500">Mark all read</button>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <label class="text-sm">
+                    <span class="text-slate-400">Category</span>
+                    <select id="categoryFilter" class="mt-1 w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                        <option value="">All</option>
+                    </select>
+                </label>
+                <label class="text-sm flex items-center gap-2 pb-2">
+                    <input id="unreadFilter" type="checkbox" />
+                    <span>Unread only</span>
+                </label>
+                <label class="text-sm flex items-center gap-2 pb-2">
+                    <input id="todayFilter" type="checkbox" />
+                    <span>Today only</span>
+                </label>
+                <button onclick="loadNotifications()" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500 text-sm">Apply Filters</button>
+            </div>
+            <p id="summaryLine" class="text-xs text-slate-400 mt-3">Loading...</p>
+        </div>
+
+        <div id="notificationsList" class="space-y-2">
+            <p class="text-slate-400">Loading notifications...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const API = 'http://localhost:5000';
+        const socket = io(API);
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!token || !user?.role) window.location.href = 'login.html';
+
+        function goBack() {
+            if (user.role === 'student') window.location.href = 'student.html';
+            else if (user.role === 'faculty') window.location.href = 'faculty.html';
+            else if (user.role === 'parent') window.location.href = 'parent.html';
+            else window.location.href = 'admin.html';
+        }
+
+        function queryString() {
+            const params = new URLSearchParams();
+            params.set('limit', '100');
+            if (document.getElementById('unreadFilter')?.checked) params.set('unread', '1');
+            if (document.getElementById('todayFilter')?.checked) params.set('today', '1');
+            const category = document.getElementById('categoryFilter')?.value || '';
+            if (category) params.set('category', category);
+            return params.toString();
+        }
+
+        async function loadNotifications() {
+            const list = document.getElementById('notificationsList');
+            const summary = document.getElementById('summaryLine');
+            const categoryFilter = document.getElementById('categoryFilter');
+            if (!list || !summary || !categoryFilter) return;
+            try {
+                const res = await fetch(`${API}/notifications/me?${queryString()}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    list.innerHTML = `<p class="text-red-400">${data.message || 'Failed to load notifications'}</p>`;
+                    return;
+                }
+                const cats = data.categories || [];
+                const current = categoryFilter.value || '';
+                categoryFilter.innerHTML = `<option value="">All</option>${cats.map(c => `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`).join('')}`;
+                summary.textContent = `${data.count || 0} shown • ${data.unread_count || 0} unread total`;
+                const items = data.items || [];
+                list.innerHTML = items.length ? items.map(n => `
+                    <div class="rounded-lg border ${Number(n.is_read || 0) === 0 ? 'border-blue-700 bg-slate-900' : 'border-slate-800 bg-slate-900/60'} p-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="font-semibold">${n.title || 'Notification'}</p>
+                                <p class="text-sm text-slate-300">${n.message || ''}</p>
+                                <p class="text-xs text-slate-500 mt-1">${n.category || 'general'} • ${n.created_at || ''}</p>
+                            </div>
+                            <button ${Number(n.is_read || 0) === 1 ? 'disabled' : ''} onclick="markOneRead(${Number(n.id || 0)})" class="px-2 py-1 text-xs rounded ${Number(n.is_read || 0) === 1 ? 'bg-slate-700 text-slate-400' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}">
+                                ${Number(n.is_read || 0) === 1 ? 'Read' : 'Mark read'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('') : `<p class="text-slate-400">No notifications match these filters.</p>`;
+            } catch (e) {
+                list.innerHTML = '<p class="text-red-400">Failed to load notifications</p>';
+            }
+        }
+
+        async function markOneRead(id) {
+            if (!id) return;
+            await fetch(`${API}/notifications/mark-read`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id })
+            });
+            loadNotifications();
+        }
+
+        async function markAllRead() {
+            await fetch(`${API}/notifications/mark-read`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ all: true })
+            });
+            loadNotifications();
+        }
+
+        document.getElementById('unreadFilter')?.addEventListener('change', loadNotifications);
+        document.getElementById('todayFilter')?.addEventListener('change', loadNotifications);
+        document.getElementById('categoryFilter')?.addEventListener('change', loadNotifications);
+        socket.on('notification_push', loadNotifications);
+        loadNotifications();
+    </script>
+</body>
+</html>

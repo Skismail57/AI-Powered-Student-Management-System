@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Portal - Smart Education ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #0891b2;
+            --primary-dark: #0e7490;
+            --bg-light: #f0f9ff;
+            --text-main: #164e63;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --border-color: #bae6fd;
+            --accent-glow: rgba(8, 145, 178, 0.1);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--text-main); 
+            transition: all 0.3s ease;
+        }
+
+        .sidebar { 
+            width: 260px; 
+            background-color: var(--sidebar-bg); 
+            border-right: 1px solid var(--border-color);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item { 
+            transition: all 0.2s; 
+            color: #64748b; 
+            border-radius: 12px;
+            margin: 4px 16px;
+            display: flex;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .sidebar-item:hover, .sidebar-item.active { 
+            background-color: var(--accent-glow); 
+            color: var(--primary); 
+            font-weight: 600;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.85rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .input-field {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+        }
+        .close-modal {
+            position: absolute;
+            right: 1.5rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar shadow-sm">
+        <div class="p-8 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-cyan-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i class="fas fa-university"></i>
+                </div>
+                <h1 class="font-black text-cyan-950 text-xl tracking-tight">Smart ERP</h1>
+            </div>
+        </div>
+        
+        <nav class="space-y-1">
+            <a href="#" onclick="showSection('dashboard')" class="sidebar-item active">
+                <i class="fas fa-tachometer-alt w-5 mr-3"></i> Overview
+            </a>
+            <a href="#" onclick="showSection('attendance')" class="sidebar-item">
+                <i class="fas fa-calendar-check w-5 mr-3"></i> Attendance
+            </a>
+            <a href="#" onclick="showSection('grading')" class="sidebar-item">
+                <i class="fas fa-graduation-cap w-5 mr-3"></i> Grading
+            </a>
+            <a href="#" onclick="showSection('research')" class="sidebar-item">
+                <i class="fas fa-microscope w-5 mr-3"></i> Research
+            </a>
+            <a href="#" onclick="showSection('appointments')" class="sidebar-item">
+                <i class="fas fa-clock w-5 mr-3"></i> Appointments
+            </a>
+        </nav>
+
+        <div class="absolute bottom-0 w-full p-6">
+            <div class="bg-cyan-50 p-4 rounded-2xl border border-cyan-100">
+                <p id="facultyName" class="font-bold text-cyan-950 text-sm">Prof. Ramesh Babu</p>
+                <p class="text-[10px] text-cyan-500 font-bold uppercase tracking-widest mb-3">CSE Department</p>
+                <button onclick="logout()" class="w-full py-2 bg-rose-50 text-rose-600 text-xs font-black rounded-lg hover:bg-rose-600 hover:text-white transition">LOGOUT</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="flex items-center justify-between mb-12 fade-in">
+            <div>
+                <h2 class="text-3xl font-black text-cyan-950">Faculty Portal</h2>
+                <p class="text-cyan-600 font-medium">Manage your academic ecosystem</p>
+            </div>
+            <div class="flex gap-3">
+                <button class="w-12 h-12 rounded-2xl bg-white border border-cyan-100 flex items-center justify-center text-cyan-600 hover:bg-cyan-50 transition">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="w-12 h-12 rounded-2xl bg-white border border-cyan-100 flex items-center justify-center text-cyan-600 hover:bg-cyan-50 transition">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sections -->
+        <section id="dashboard" class="content-section fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                <div class="bg-gradient-to-br from-cyan-600 to-cyan-700 p-6 rounded-[2rem] shadow-xl shadow-cyan-100 text-white transform hover:scale-105 transition-all">
+                    <p class="text-cyan-100 text-[10px] font-black uppercase tracking-widest mb-1">Active Classes</p>
+                    <h3 class="text-4xl font-black mb-4">4</h3>
+                    <div class="h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                        <div class="h-full bg-white w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 rounded-[2rem] shadow-xl shadow-indigo-100 text-white transform hover:scale-105 transition-all">
+                    <p class="text-indigo-100 text-[10px] font-black uppercase tracking-widest mb-1">Total Students</p>
+                    <h3 class="text-4xl font-black">156</h3>
+                    <p class="text-[10px] font-bold mt-2"><i class="fas fa-arrow-up mr-1"></i> 12% from last sem</p>
+                </div>
+                <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 rounded-[2rem] shadow-xl shadow-emerald-100 text-white transform hover:scale-105 transition-all">
+                    <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest mb-1">Avg. Attendance</p>
+                    <h3 class="text-4xl font-black">88.4%</h3>
+                    <p class="text-[10px] font-bold mt-2">Target: 90%</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-10">
+                <div class="card">
+                    <h3 class="text-lg font-black text-cyan-950 mb-6">Recent Performance Trend</h3>
+                    <canvas id="performanceChart" height="200"></canvas>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-black text-cyan-950 mb-6">Upcoming Appointments</h3>
+                    <div id="meetingsList" class="space-y-4">
+                        <p class="text-cyan-400 text-sm italic">Loading student requests...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attendance Section -->
+        <section id="attendance" class="content-section hidden fade-in">
+            <div class="card">
+                <h2 class="text-2xl font-black text-cyan-950 mb-8">Mark Daily Attendance</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div>
+                        <label class="block text-[10px] font-black text-cyan-500 uppercase mb-2">Subject</label>
+                        <select id="attendanceSubjectId" class="input-field"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-cyan-500 uppercase mb-2">Date</label>
+                        <input type="date" id="attendanceDate" class="input-field">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadStudentsForAttendance()" class="btn-primary w-full">Load Student List</button>
+                    </div>
+                </div>
+                <div id="attendanceList" class="space-y-2"></div>
+                <button id="saveAttendanceBtn" onclick="saveAttendance()" class="hidden w-full mt-8 btn-primary shadow-xl shadow-cyan-200">Submit Attendance</button>
+            </div>
+        </section>
+
+        <!-- Grading Section -->
+        <section id="grading" class="content-section hidden fade-in">
+            <div class="card">
+                <h2 class="text-2xl font-black text-cyan-950 mb-8">Student Grading Portal</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <input id="gradeStudentId" class="input-field" placeholder="Student ID">
+                    <input id="gradeSubjectId" class="input-field" placeholder="Subject ID">
+                    <input id="gradeScore" class="input-field" placeholder="Score (0-100)">
+                    <button onclick="submitGrade()" class="btn-primary">Update Grade</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Research Section -->
+        <section id="research" class="content-section hidden fade-in">
+            <div class="card">
+                <h2 class="text-2xl font-black text-cyan-950 mb-4">Research & Publications</h2>
+                <p class="text-cyan-600 mb-8 font-medium">Manage your active research projects and publications.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="p-6 rounded-2xl bg-cyan-50 border border-cyan-100">
+                        <h4 class="font-bold text-cyan-950 mb-2">Active Project</h4>
+                        <p class="text-sm text-cyan-700">AI-driven diagnosis in radiology imaging</p>
+                        <div class="mt-4 flex gap-2">
+                            <span class="px-2 py-1 bg-cyan-200 text-cyan-800 text-[10px] font-bold rounded">PHASE 2</span>
+                            <span class="px-2 py-1 bg-white text-cyan-800 text-[10px] font-bold rounded border">NIH FUNDED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Appointments Section -->
+        <section id="appointments" class="content-section hidden fade-in">
+            <div class="card">
+                <h2 class="text-2xl font-black text-cyan-950 mb-6">Student Appointment Requests</h2>
+                <div id="fullMeetingsList" class="space-y-4"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="js/faculty.js"></script>
+    <script>
+        // Initialize Performance Chart
+        const ctx = document.getElementById('performanceChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Avg Class Score',
+                        data: [72, 78, 75, 84],
+                        borderColor: '#0891b2',
+                        backgroundColor: 'rgba(8, 145, 178, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 py-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Messaging Center</h1>
+            <button onclick="goBack()" class="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm">Back</button>
+        </div>
+
+        <section class="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-4">
+            <h2 class="font-semibold mb-3">Send Message</h2>
+            <div class="grid md:grid-cols-4 gap-2 mb-2">
+                <select id="recipientRole" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+                    <option value="student">student</option>
+                    <option value="faculty">faculty</option>
+                    <option value="parent">parent</option>
+                    <option value="admin">admin</option>
+                </select>
+                <input id="recipientId" type="number" min="1" class="px-3 py-2 rounded bg-slate-800 border border-slate-700" placeholder="Recipient ID" />
+                <input id="msgBody" class="md:col-span-2 px-3 py-2 rounded bg-slate-800 border border-slate-700" placeholder="Write a short message..." />
+            </div>
+            <button onclick="sendMessage()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500">Send</button>
+            <p id="sendStatus" class="text-sm mt-2 text-slate-400"></p>
+        </section>
+
+        <section class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="font-semibold">Inbox</h2>
+                <div class="flex items-center gap-2">
+                    <button onclick="exportInboxCsv()" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-sm">Export CSV</button>
+                    <button onclick="loadInbox()" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-sm">Refresh</button>
+                </div>
+            </div>
+            <div id="inboxList" class="space-y-2 text-sm"></div>
+        </section>
+    </div>
+    <script>
+        const API = 'http://localhost:5000';
+        const socket = io(API);
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        let currentInboxItems = [];
+        if (!token) window.location.href = 'login.html';
+
+        function goBack() {
+            if (user.role === 'admin') return window.location.href = 'admin.html';
+            if (user.role === 'faculty') return window.location.href = 'faculty.html';
+            if (user.role === 'student') return window.location.href = 'student.html';
+            if (user.role === 'parent') return window.location.href = 'parent.html';
+            window.location.href = 'login.html';
+        }
+
+        function getPeerFilterFromInputs() {
+            const peer_role = (document.getElementById('recipientRole')?.value || '').trim();
+            const peer_id = Number(document.getElementById('recipientId')?.value || 0);
+            if (!peer_role || peer_id <= 0) return null;
+            return { peer_role, peer_id };
+        }
+
+        function applyPeerFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const peer_role = (params.get('peer_role') || '').trim();
+            const peer_id = Number(params.get('peer_id') || 0);
+            if (!peer_role || peer_id <= 0) return;
+            const roleEl = document.getElementById('recipientRole');
+            const idEl = document.getElementById('recipientId');
+            if (roleEl) roleEl.value = peer_role;
+            if (idEl) idEl.value = String(peer_id);
+        }
+
+        async function sendMessage() {
+            const payload = {
+                recipient_role: document.getElementById('recipientRole').value,
+                recipient_id: Number(document.getElementById('recipientId').value),
+                body: document.getElementById('msgBody').value.trim()
+            };
+            const status = document.getElementById('sendStatus');
+            status.textContent = 'Sending...';
+            try {
+                const res = await fetch(`${API}/messages/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                status.textContent = res.ok ? 'Message sent' : (data.message || 'Failed');
+                if (res.ok) {
+                    document.getElementById('msgBody').value = '';
+                    loadInbox();
+                }
+            } catch (e) {
+                status.textContent = 'Failed to send';
+            }
+        }
+
+        async function markRead(id) {
+            await fetch(`${API}/messages/mark-read`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ id })
+            });
+            loadInbox();
+        }
+
+        async function loadInbox() {
+            const list = document.getElementById('inboxList');
+            list.innerHTML = '<p class="text-slate-400">Loading...</p>';
+            try {
+                const peer = getPeerFilterFromInputs();
+                const qs = new URLSearchParams();
+                qs.set('limit', '80');
+                if (peer) {
+                    qs.set('peer_role', peer.peer_role);
+                    qs.set('peer_id', String(peer.peer_id));
+                }
+                const res = await fetch(`${API}/messages/inbox?${qs.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                if (!res.ok) {
+                    list.innerHTML = `<p class="text-red-300">${data.message || 'Failed'}</p>`;
+                    return;
+                }
+                const items = data.items || [];
+                currentInboxItems = items;
+                list.innerHTML = items.length ? items.map(m => `
+                    <div class="p-3 rounded border ${Number(m.is_read || 0) === 0 ? 'border-indigo-600 bg-slate-800' : 'border-slate-800 bg-slate-900'}">
+                        <div class="flex items-center justify-between">
+                            <p><span class="text-slate-400">${m.sender_role}#${m.sender_id}</span> -> <span class="text-slate-300">${m.recipient_role}#${m.recipient_id}</span></p>
+                            <p class="text-xs text-slate-500">${m.created_at || ''}</p>
+                        </div>
+                        <p class="mt-1">${m.body || ''}</p>
+                        ${Number(m.is_read || 0) === 0 && m.recipient_role === user.role && Number(m.recipient_id) === Number(user.id) ? `<button onclick="markRead(${m.id})" class="text-xs mt-2 px-2 py-1 rounded bg-indigo-700 hover:bg-indigo-600">Mark read</button>` : ''}
+                    </div>
+                `).join('') : '<p class="text-slate-400">No messages yet.</p>';
+            } catch (e) {
+                currentInboxItems = [];
+                list.innerHTML = '<p class="text-red-300">Failed to load inbox</p>';
+            }
+        }
+
+        function exportInboxCsv() {
+            const items = currentInboxItems || [];
+            if (!items.length) return;
+            const headers = ['id', 'sender_role', 'sender_id', 'recipient_role', 'recipient_id', 'body', 'is_read', 'created_at'];
+            const escapeCsv = (v) => {
+                const s = String(v ?? '');
+                return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+            };
+            const rows = [headers.join(','), ...items.map(x => headers.map(h => escapeCsv(x[h])).join(','))];
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `messages_thread_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        socket.on('message_push', () => loadInbox());
+        applyPeerFromUrl();
+        loadInbox();
+    </script>
+</body>
+</html>

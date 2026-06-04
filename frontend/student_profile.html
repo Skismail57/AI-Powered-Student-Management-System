@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="max-w-6xl mx-auto p-6">
+      <div class="flex items-center justify-between gap-4 mb-6">
+        <div>
+          <p class="text-sm text-slate-500">Student Profile</p>
+          <h1 id="studentName" class="text-3xl font-bold">Loading…</h1>
+          <p id="studentMeta" class="text-sm text-slate-600 mt-1"></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="admin.html" class="px-4 py-2 rounded-lg border bg-white hover:bg-slate-50">Back</a>
+          <button id="logoutBtn" class="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">Logout</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-xl border p-4">
+          <p class="text-sm text-slate-500">Predicted Marks</p>
+          <p id="predictedMarks" class="text-3xl font-bold mt-1">—</p>
+          <p class="text-xs text-slate-500 mt-1">Explainable AI (XAI) enabled</p>
+        </div>
+        <div class="bg-white rounded-xl border p-4">
+          <p class="text-sm text-slate-500">Risk Score</p>
+          <div class="flex items-end gap-2 mt-1">
+            <p id="riskScore" class="text-3xl font-bold">—</p>
+            <span id="riskBadge" class="text-xs font-semibold px-2 py-1 rounded-full border">—</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Based on attendance, study, sleep, predicted marks</p>
+        </div>
+        <div class="bg-white rounded-xl border p-4">
+          <p class="text-sm text-slate-500">Current Metrics</p>
+          <p id="metricsNow" class="text-sm mt-2 text-slate-700">—</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl border p-4">
+          <h2 class="text-lg font-semibold">Why this prediction?</h2>
+          <p class="text-sm text-slate-500 mt-1">Feature impacts vs a reference student profile.</p>
+          <div id="xaiList" class="mt-3 space-y-2"></div>
+        </div>
+
+        <div class="bg-white rounded-xl border p-4">
+          <h2 class="text-lg font-semibold">Recommendations</h2>
+          <p class="text-sm text-slate-500 mt-1">Actionable guidance generated from current metrics.</p>
+          <ul id="recommendations" class="mt-3 list-disc pl-5 text-sm text-slate-700 space-y-1"></ul>
+        </div>
+
+        <div class="bg-white rounded-xl border p-4 lg:col-span-2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold">History</h2>
+            <button id="refreshBtn" class="px-3 py-2 rounded-lg border bg-white hover:bg-slate-50 text-sm">Refresh</button>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <div>
+              <h3 class="font-semibold text-sm">Metrics snapshots</h3>
+              <div class="overflow-auto border rounded-lg mt-2">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-slate-50">
+                    <tr>
+                      <th class="text-left p-2">Time</th>
+                      <th class="text-left p-2">Attendance</th>
+                      <th class="text-left p-2">Study</th>
+                      <th class="text-left p-2">Sleep</th>
+                      <th class="text-left p-2">Pred</th>
+                    </tr>
+                  </thead>
+                  <tbody id="metricsHistory" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-semibold text-sm">Attendance events</h3>
+              <div class="overflow-auto border rounded-lg mt-2">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-slate-50">
+                    <tr>
+                      <th class="text-left p-2">Date</th>
+                      <th class="text-left p-2">Status</th>
+                      <th class="text-left p-2">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attendanceHistory" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = 'http://localhost:5000';
+
+      function qs(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
+
+      function fmtImpact(v) {
+        const sign = v > 0 ? '+' : '';
+        return `${sign}${v}`;
+      }
+
+      function setRiskBadge(level) {
+        const badge = document.getElementById('riskBadge');
+        badge.textContent = level.toUpperCase();
+        badge.className = 'text-xs font-semibold px-2 py-1 rounded-full border';
+        if (level === 'low') badge.className += ' bg-green-50 text-green-700 border-green-200';
+        else if (level === 'medium') badge.className += ' bg-yellow-50 text-yellow-700 border-yellow-200';
+        else badge.className += ' bg-red-50 text-red-700 border-red-200';
+      }
+
+      async function fetchJson(url) {
+        const res = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || `Request failed (${res.status})`);
+        }
+        return await res.json();
+      }
+
+      async function loadProfile() {
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        const id = qs('id');
+        if (!id) throw new Error('Missing student id');
+
+        const profile = await fetchJson(`${API_BASE}/students/${id}/profile?limit=90`);
+
+        const student = profile.student;
+        document.getElementById('studentName').textContent = student.name;
+        document.getElementById('studentMeta').textContent = `ID #${student.id} • Created ${student.created_at || ''}`;
+
+        document.getElementById('predictedMarks').textContent = profile.xai.predicted_marks;
+        document.getElementById('riskScore').textContent = profile.risk.score;
+        setRiskBadge(profile.risk.level);
+
+        document.getElementById('metricsNow').textContent =
+          `Attendance: ${student.attendance}% • Study: ${student.study_hours}h/day • Sleep: ${student.sleep_hours}h/day`;
+
+        const xaiList = document.getElementById('xaiList');
+        xaiList.innerHTML = profile.xai.impacts.map(i => {
+          const pos = i.impact >= 0;
+          return `
+            <div class="flex items-center justify-between border rounded-lg p-3">
+              <div>
+                <p class="font-semibold">${i.feature.replace('_', ' ')}</p>
+                <p class="text-xs text-slate-500">Impact on marks vs reference</p>
+              </div>
+              <span class="font-mono font-semibold ${pos ? 'text-green-700' : 'text-red-700'}">
+                ${fmtImpact(i.impact)}
+              </span>
+            </div>
+          `;
+        }).join('');
+
+        // Pull human-readable recommendations from /insights (single student)
+        const insights = await fetchJson(`${API_BASE}/insights?limit=1&search=${encodeURIComponent(student.name)}`);
+        const rec = insights.items?.[0]?.recommendations || [];
+        const ul = document.getElementById('recommendations');
+        ul.innerHTML = rec.map(r => `<li>${r}</li>`).join('') || `<li>No recommendations available.</li>`;
+
+        const metricsTbody = document.getElementById('metricsHistory');
+        metricsTbody.innerHTML = (profile.metrics_history || []).slice().reverse().map(m => `
+          <tr>
+            <td class="p-2 whitespace-nowrap">${(m.created_at || '').toString().replace('T', ' ')}</td>
+            <td class="p-2">${m.attendance}%</td>
+            <td class="p-2">${m.study_hours}h</td>
+            <td class="p-2">${m.sleep_hours}h</td>
+            <td class="p-2">${Number(m.predicted_marks).toFixed(2)}</td>
+          </tr>
+        `).join('') || `<tr><td class="p-2 text-slate-500" colspan="5">No history yet (update the student once to start snapshots).</td></tr>`;
+
+        const attTbody = document.getElementById('attendanceHistory');
+        attTbody.innerHTML = (profile.attendance_history || []).slice().reverse().map(a => `
+          <tr>
+            <td class="p-2 whitespace-nowrap">${a.date || ''}</td>
+            <td class="p-2">
+              <span class="px-2 py-1 rounded-full text-xs font-semibold ${a.status === 'present' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}">
+                ${String(a.status || '').toUpperCase()}
+              </span>
+            </td>
+            <td class="p-2">${a.notes || ''}</td>
+          </tr>
+        `).join('') || `<tr><td class="p-2 text-slate-500" colspan="3">No attendance records yet.</td></tr>`;
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      });
+
+      document.getElementById('refreshBtn').addEventListener('click', async () => {
+        try { await loadProfile(); } catch (e) { alert(e.message); }
+      });
+
+      loadProfile().catch(e => alert(e.message));
+    </script>
+  </body>
+</html>
+

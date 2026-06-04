@@ -1,0 +1,16 @@
+
+{
+  "name": "Student Management System",
+  "short_name": "StudentMS",
+  "start_url": "login.html",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#4fc3f7",
+  "icons": [
+    {
+      "src": "https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=modern%20minimal%20education%20logo%20blue%20purple%20gradient&image_size=square",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

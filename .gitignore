@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment and secrets
+backend/.env
+.env
+
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+backend/app.log
+
+# Uploaded/generated files
+frontend/uploads/
+backend/uploads/
+backend/backups/
+
+# OS/editor files
+desktop.ini
+.DS_Store

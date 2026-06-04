@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Engagement Analytics</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <h1>Classroom Engagement Analytics</h1>
+    <div>
+        <label for="classId">Class ID:</label>
+        <input type="number" id="classId" min="1">
+        <button onclick="loadEngagement()">Load Analytics</button>
+    </div>
+    <div id="analyticsList"></div>
+    <hr>
+    <h2>Submit Engagement Analytics</h2>
+    <form id="engagementForm" onsubmit="submitEngagement(event)">
+        <label>Class ID: <input type="number" id="formClassId" required></label><br>
+        <label>Faculty ID: <input type="number" id="facultyId" required></label><br>
+        <label>Date: <input type="date" id="date" required></label><br>
+        <label>Quiz Participation (%): <input type="number" id="quizParticipation" min="0" max="100" required></label><br>
+        <label>Attendance Interaction (%): <input type="number" id="attendanceInteraction" min="0" max="100" required></label><br>
+        <label>Notes: <input type="text" id="notes"></label><br>
+        <button type="submit">Submit</button>
+    </form>
+    <script src="js/engagement.js"></script>
+</body>
+</html>

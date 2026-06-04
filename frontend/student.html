@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital University - Student Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --accent-glow: rgba(79, 70, 229, 0.1);
+        }
+
+        /* Role-Specific Overrides */
+        body[data-role="student-cse"] {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --accent-glow: rgba(16, 185, 129, 0.1);
+        }
+        body[data-role="student-medical"] {
+            --primary: #e11d48;
+            --primary-dark: #be123c;
+            --accent-glow: rgba(225, 29, 72, 0.1);
+        }
+
+        .dark {
+            --bg-light: #020617;
+            --text-main: #f1f5f9;
+            --card-bg: #0f172a;
+            --sidebar-bg: #0f172a;
+            --border-color: #1e293b;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--text-main); 
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar { 
+            width: 260px; 
+            background-color: var(--sidebar-bg); 
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar-item { 
+            transition: all 0.2s; 
+            color: #64748b; 
+            border-radius: 12px;
+            margin: 2px 0;
+        }
+
+        .sidebar-item:hover, .sidebar-item.active { 
+            background-color: var(--accent-glow); 
+            color: var(--primary); 
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px 0 var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px 0 var(--accent-glow);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+        }
+        .close-modal {
+            position: absolute;
+            right: 1.5rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s;
+        }
+        .close-modal:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar bg-white border-r flex flex-col fixed h-full z-50">
+        <div class="p-6 flex items-center space-x-3 border-b">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                <i class="fas fa-graduation-cap text-xl"></i>
+            </div>
+            <span class="text-xl font-bold text-gray-800">EduSmart</span>
+        </div>
+        
+        <nav class="flex-1 p-4 overflow-y-auto">
+            <ul class="space-y-1">
+                <li>
+                    <a href="#" onclick="showSection('dashboard')" class="sidebar-item active flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-columns w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('curriculum')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-scroll w-5"></i>
+                        <span>Curriculum</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('timetable')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-clock w-5"></i>
+                        <span>Timetable</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('learning')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-book-open w-5"></i>
+                        <span>Study Materials</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('academic-calendar')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-calendar-alt w-5"></i>
+                        <span>Academic Calendar</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('leaderboard')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-trophy w-5"></i>
+                        <span>Leaderboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('faculty')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-chalkboard-teacher w-5"></i>
+                        <span>Faculty Profiles</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('notices')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-bullhorn w-5"></i>
+                        <span>Smart Notice Board</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('social-feed')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Campus Feed</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('library')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-book w-5"></i>
+                        <span>Digital Library</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('placement')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-briefcase w-5"></i>
+                        <span>Placements</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('ai-assistant')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-robot w-5"></i>
+                        <span>AI Campus Advisor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('doubt-solver')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-brain w-5"></i>
+                        <span>AI Doubt Solver</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('exams')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-file-alt w-5"></i>
+                        <span>Competitive Exams</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('planner')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-calendar-check w-5"></i>
+                        <span>Academic Planner</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('cgpa')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>CGPA Predictor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('resume')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-file-pdf w-5"></i>
+                        <span>Resume Builder</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('cafeteria')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-utensils w-5"></i>
+                        <span>Cafeteria</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('health')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-heartbeat w-5"></i>
+                        <span>Health Records</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('parking')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-parking w-5"></i>
+                        <span>Parking</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('streaming')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-video w-5"></i>
+                        <span>Live Events</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('campus')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-university w-5"></i>
+                        <span>Campus Services</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('forum')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-comments w-5"></i>
+                        <span>Discussion Forum</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('security')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-shield-alt w-5"></i>
+                        <span>Security & Login History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('finance')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-wallet w-5"></i>
+                        <span>Campus Store & Finance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('exam-schedule')" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg">
+                        <i class="fas fa-calendar-alt w-5"></i>
+                        <span>Exam Schedule</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t">
+            <div id="gamificationStatus" class="mb-4 bg-indigo-50 p-3 rounded-lg border border-indigo-100 hidden">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] font-bold text-indigo-600 uppercase">Level <span id="studentLevel">1</span></span>
+                    <span class="text-[10px] font-bold text-indigo-400"><span id="studentXP">0</span> XP</span>
+                </div>
+                <div class="h-1.5 w-full bg-indigo-100 rounded-full overflow-hidden">
+                    <div id="xpBar" class="h-full bg-indigo-600 transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 p-2">
+                <img src="https://picsum.photos/seed/student/40/40" class="w-10 h-10 rounded-full" alt="Profile">
+                <div class="flex-1 min-w-0">
+                    <p id="studentName" class="text-sm font-bold text-gray-800 truncate">Loading...</p>
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Student</p>
+                </div>
+                <button id="logoutBtn" class="text-gray-400 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-[260px] p-8">
+        <!-- Universal Search Header -->
+        <div class="flex items-center justify-between mb-8 bg-white p-4 rounded-xl shadow-sm border">
+            <div class="relative w-full max-w-xl">
+                <input type="text" id="universalSearchInput" oninput="performUniversalSearch()" 
+                       class="form-input pl-10 w-full border-none focus:ring-0" placeholder="Search for books, subjects, or forum topics...">
+                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                
+                <!-- Search Results Dropdown -->
+                <div id="universalSearchResults" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border z-[100] hidden max-h-96 overflow-y-auto">
+                    <!-- Results dynamic -->
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="text-right hidden md:block">
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Server Time</p>
+                    <p id="serverTime" class="text-sm font-bold text-gray-700">--:--</p>
+                </div>
+                <button onclick="toggleDarkMode()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-500 hover:text-indigo-600 transition" title="Toggle Theme">
+                    <i id="themeIcon" class="fas fa-moon"></i>
+                </button>
+                <button class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-500 hover:text-indigo-600 transition">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="content-area">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Welcome Back!</h2>
+                    <div class="flex space-x-4">
+                        <button onclick="submitSelfAttendance()" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-100 transition">
+                            <i class="fas fa-check-circle mr-2"></i> Mark Attendance
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 rounded-[2rem] shadow-xl shadow-indigo-100 text-white transform hover:scale-105 transition-all">
+                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Attendance</p>
+                        <h3 id="attendanceRate" class="text-3xl font-black">--%</h3>
+                        <div class="mt-4 h-1 w-full bg-white/20 rounded-full">
+                            <div class="h-full bg-white rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 rounded-[2rem] shadow-xl shadow-emerald-100 text-white transform hover:scale-105 transition-all">
+                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Avg. Marks</p>
+                        <h3 id="avgMarks" class="text-3xl font-black">--</h3>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span class="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full">TOP 5%</span>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 to-amber-600 p-6 rounded-[2rem] shadow-xl shadow-amber-100 text-white transform hover:scale-105 transition-all">
+                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Assignments</p>
+                        <h3 id="completedAssignments" class="text-3xl font-black">--</h3>
+                        <div class="mt-4 flex -space-x-2">
+                            <div class="w-6 h-6 rounded-full bg-white/20 border-2 border-amber-600"></div>
+                            <div class="w-6 h-6 rounded-full bg-white/20 border-2 border-amber-600"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-rose-500 to-rose-600 p-6 rounded-[2rem] shadow-xl shadow-rose-100 text-white transform hover:scale-105 transition-all">
+                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Pending Tasks</p>
+                        <h3 id="pendingTasks" class="text-3xl font-black">--</h3>
+                        <p class="mt-4 text-[10px] font-bold italic">Due in 2 days</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left: Charts -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm h-80">
+                            <h4 class="font-bold text-gray-700 mb-4">Attendance Trend & Forecast</h4>
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                        
+                        <!-- Prediction Widgets -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 p-6 rounded-xl shadow-lg text-white">
+                                <h4 class="font-bold text-indigo-100 mb-2 uppercase text-xs">Risk Assessment</h4>
+                                <p class="text-2xl font-bold mb-4" id="backlogRisk">Low Risk</p>
+                                <div class="bg-indigo-400 bg-opacity-30 p-3 rounded-lg text-xs leading-relaxed">
+                                    <i class="fas fa-brain mr-2"></i> AI Prediction: 0% probability of backlogs this semester based on current internals.
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 rounded-xl shadow-lg text-white">
+                                <h4 class="font-bold text-emerald-100 mb-2 uppercase text-xs">Attendance Forecast</h4>
+                                <p class="text-2xl font-bold mb-4" id="attendanceForecast">88%</p>
+                                <div class="bg-emerald-400 bg-opacity-30 p-3 rounded-lg text-xs leading-relaxed">
+                                    <i class="fas fa-chart-line mr-2"></i> On track to finish with 88% if current regularity continues.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm h-80">
+                            <h4 class="font-bold text-gray-700 mb-4">Performance by Subject</h4>
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Right: Sidebar Info -->
+                    <div class="space-y-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-bold text-gray-700 mb-4 flex items-center">
+                                <i class="fas fa-bell mr-2 text-amber-500"></i> Notifications
+                            </h4>
+                            <div id="notificationList" class="space-y-4 max-h-60 overflow-y-auto pr-2">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-bold text-gray-700 mb-4 flex items-center">
+                                <i class="fas fa-star mr-2 text-indigo-500"></i> Recommendations
+                            </h4>
+                            <div id="recommendationList" class="space-y-3">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Curriculum Section -->
+            <section id="curriculum" class="content-section hidden fade-in">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Curriculum & OBE</h2>
+                    <select id="curriculumSemFilter" onchange="loadCurriculum()" class="form-input w-40">
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                    </select>
+                </div>
+                <div id="curriculumGpaBar" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 hidden">
+                    <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm">
+                        <p class="text-xs text-gray-400 uppercase font-bold">CGPA</p>
+                        <p id="curriculumCgpa" class="text-2xl font-black text-indigo-600">--</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-l-4 border-emerald-500 shadow-sm">
+                        <p class="text-xs text-gray-400 uppercase font-bold">Credits earned</p>
+                        <p id="curriculumCredits" class="text-2xl font-black text-emerald-600">--</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-l-4 border-rose-500 shadow-sm">
+                        <p class="text-xs text-gray-400 uppercase font-bold">Backlogs</p>
+                        <p id="curriculumBacklogs" class="text-2xl font-black text-rose-600">--</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-l-4 border-amber-500 shadow-sm">
+                        <p class="text-xs text-gray-400 uppercase font-bold">Materials</p>
+                        <p id="curriculumMaterialsHint" class="text-sm font-semibold text-amber-700 mt-2">Tap a subject</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div id="curriculumGrid" class="grid grid-cols-1 gap-4">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold text-lg mb-4">Outcome Mapping (OBE)</h3>
+                        <div id="obeOutcomesList" class="space-y-4">
+                            <p class="text-gray-500 text-sm italic">Select a subject to view outcomes.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Study Materials (Master Data Browse) -->
+            <section id="learning" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800">Study Materials</h2>
+                        <p class="text-sm text-gray-500">Browse departments, subjects, and resources from your college catalog</p>
+                    </div>
+                    <button id="learningBackBtn" onclick="learningGoBack()" class="hidden px-3 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50">
+                        <i class="fas fa-arrow-left mr-1"></i> Back
+                    </button>
+                </div>
+
+                <div id="streamGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="filterDepartments('engineering')" class="p-6 bg-white rounded-xl shadow-sm border-l-4 border-blue-500 cursor-pointer hover:shadow-md transition">
+                        <i class="fas fa-cog text-3xl text-blue-600 mb-3"></i>
+                        <h3 class="font-bold text-lg">Engineering</h3>
+                        <p class="text-sm text-gray-500">CSE, ECE, Mechanical, and more</p>
+                    </div>
+                    <div onclick="filterDepartments('medical')" class="p-6 bg-white rounded-xl shadow-sm border-l-4 border-red-500 cursor-pointer hover:shadow-md transition">
+                        <i class="fas fa-stethoscope text-3xl text-red-600 mb-3"></i>
+                        <h3 class="font-bold text-lg">Medical</h3>
+                        <p class="text-sm text-gray-500">MBBS, Nursing, Pharmacy</p>
+                    </div>
+                    <div onclick="filterDepartments('commerce')" class="p-6 bg-white rounded-xl shadow-sm border-l-4 border-green-500 cursor-pointer hover:shadow-md transition">
+                        <i class="fas fa-chart-line text-3xl text-green-600 mb-3"></i>
+                        <h3 class="font-bold text-lg">Commerce</h3>
+                        <p class="text-sm text-gray-500">BCom, BBA, MBA streams</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-white rounded-xl shadow-sm border p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Bengaluru College Highlights</h3>
+                            <p class="text-sm text-gray-500">Quick reference for colleges and popular subject tracks across Bengaluru.</p>
+                        </div>
+                    </div>
+                    <div id="bengaluruCollegeGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+                </div>
+
+                <div id="deptContainer" class="hidden mt-6">
+                    <h3 id="currentStreamTitle" class="text-xl font-bold mb-4 text-gray-800"></h3>
+                    <div id="deptGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+                <div id="subjectContainer" class="hidden mt-6">
+                    <h3 id="currentDeptTitle" class="text-xl font-bold mb-4 text-gray-800"></h3>
+                    <div id="subjectCollegeHint" class="hidden mb-4 bg-indigo-50 border border-indigo-100 rounded-xl p-4"></div>
+                    <div id="subjectList" class="grid grid-cols-1 gap-3"></div>
+                </div>
+
+                <div id="materialContainer" class="hidden mt-6">
+                    <h3 id="currentSubjectTitle" class="text-xl font-bold mb-4 text-gray-800"></h3>
+                    <div id="materialGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </section>
+
+            <!-- Unified Academic Calendar -->
+            <section id="academic-calendar" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Academic Calendar</h2>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-500">Range</label>
+                        <select id="calendarDaysRange" onchange="loadAcademicCalendar()" class="form-input w-28 text-sm">
+                            <option value="14">14 days</option>
+                            <option value="30" selected>30 days</option>
+                            <option value="60">60 days</option>
+                        </select>
+                        <button onclick="loadAcademicCalendar()" class="px-3 py-2 text-sm rounded border hover:bg-gray-50">Refresh</button>
+                    </div>
+                </div>
+                <div id="academicCalendarList" class="space-y-3">
+                    <p class="text-gray-500 text-sm">Loading calendar...</p>
+                </div>
+            </section>
+
+            <!-- Timetable Section -->
+            <section id="timetable" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Dynamic Timetable</h2>
+                    <div class="flex gap-4">
+                        <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold self-center">Semester 4 - CS</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-4 border-b font-bold text-gray-700 w-32">Day</th>
+                                <th class="p-4 border-b font-bold text-gray-700 text-center">09:00 - 10:30</th>
+                                <th class="p-4 border-b font-bold text-gray-700 text-center">10:45 - 12:15</th>
+                                <th class="p-4 border-b font-bold text-gray-700 text-center">Lunch</th>
+                                <th class="p-4 border-b font-bold text-gray-700 text-center">01:30 - 03:00</th>
+                                <th class="p-4 border-b font-bold text-gray-700 text-center">03:15 - 04:45</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableBody">
+                            <!-- Dynamic rows for Mon-Fri -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Leaderboard Section -->
+            <section id="leaderboard" class="content-section hidden fade-in">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-8 text-gray-800 flex items-center">
+                        <i class="fas fa-trophy mr-3 text-yellow-500"></i> Campus Leaderboard
+                    </h2>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-indigo-600 text-white">
+                                <tr>
+                                    <th class="p-4 font-bold uppercase text-xs">Rank</th>
+                                    <th class="p-4 font-bold uppercase text-xs">Student</th>
+                                    <th class="p-4 font-bold uppercase text-xs text-right">Level</th>
+                                    <th class="p-4 font-bold uppercase text-xs text-right">XP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Faculty Profiles Section -->
+            <section id="faculty" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Our Expert Faculty</h2>
+                </div>
+                <div id="facultyProfilesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic -->
+                </div>
+            </section>
+
+            <!-- Smart Notice Board Section -->
+            <section id="notices" class="content-section hidden fade-in">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">Smart Notice Board</h2>
+                <div id="noticesList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Dynamic -->
+                </div>
+            </section>
+
+            <!-- Campus Social Feed Section -->
+            <section id="social-feed" class="content-section hidden fade-in">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-8 text-gray-800">Campus Buzz</h2>
+                    
+                    <!-- Create Post -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border mb-8">
+                        <textarea id="socialPostContent" class="form-input h-24 mb-4" placeholder="What's happening on campus?"></textarea>
+                        <div class="flex justify-between items-center">
+                            <button class="text-gray-500 hover:text-indigo-600 transition text-sm">
+                                <i class="fas fa-image mr-2"></i> Add Image
+                            </button>
+                            <button onclick="submitSocialPost()" class="btn-primary py-2 px-6">Post Update</button>
+                        </div>
+                    </div>
+
+                    <!-- Feed -->
+                    <div id="socialFeedList" class="space-y-6">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Digital Library Section -->
+            <section id="library" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Digital Library</h2>
+                    <div class="flex gap-4">
+                        <div class="relative w-64">
+                            <input type="text" id="librarySearch" placeholder="Search books..." class="form-input pl-10 w-full" oninput="loadLibraryBooks()">
+                            <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                        </div>
+                        <button onclick="toggleLibraryView()" id="libraryViewBtn" class="btn-primary">
+                            <i class="fas fa-history mr-2"></i> Borrow History
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="libraryBooksView">
+                    <div id="libraryBooksGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <!-- Dynamic books here -->
+                    </div>
+                </div>
+
+                <div id="libraryHistoryView" class="hidden">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="p-4 border-b font-bold text-gray-700">Book Title</th>
+                                    <th class="p-4 border-b font-bold text-gray-700">Borrowed At</th>
+                                    <th class="p-4 border-b font-bold text-gray-700">Due Date</th>
+                                    <th class="p-4 border-b font-bold text-gray-700">Status</th>
+                                    <th class="p-4 border-b font-bold text-gray-700">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="libraryHistoryTableBody">
+                                <!-- Dynamic history here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Placement Portal Section -->
+            <section id="placement" class="content-section hidden fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <!-- Summary Stats -->
+                    <div id="placementSummary" class="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-6 mb-2">
+                        <!-- Dynamic -->
+                    </div>
+
+                    <!-- Job Listings -->
+                    <div class="lg:col-span-3">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800">Opportunities</h2>
+                            <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                                <button onclick="filterPlacements('full-time')" id="btnJobFT" class="px-4 py-1.5 rounded-md text-xs font-bold bg-white shadow-sm">Full-Time</button>
+                                <button onclick="filterPlacements('internship')" id="btnJobIntern" class="px-4 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:bg-white transition">Internships</button>
+                            </div>
+                        </div>
+                        <div id="placementJobsList" class="space-y-6">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+
+                    <!-- Sidebar: Apps & Interviews -->
+                    <div class="space-y-8">
+                        <div class="bg-white p-5 rounded-xl shadow-sm">
+                            <h4 class="font-bold text-gray-700 mb-4">My Applications</h4>
+                            <div id="placementApplicationsList" class="space-y-3">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm">
+                            <h4 class="font-bold text-gray-700 mb-4">Upcoming Interviews</h4>
+                            <div id="placementInterviewsList" class="space-y-3">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-gray-700">Certifications</h4>
+                                <button onclick="openModal('addCertificateModal')" class="text-xs text-indigo-600 font-bold">+ Add</button>
+                            </div>
+                            <div id="placementCertificatesList" class="space-y-3">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Assistant Section -->
+            <section id="ai-assistant" class="content-section hidden fade-in">
+                <div class="max-w-3xl mx-auto flex flex-col h-[calc(100vh-160px)]">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800 flex items-center">
+                        <i class="fas fa-robot mr-3 text-indigo-600"></i> AI Campus Advisor
+                    </h2>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border flex-1 flex flex-col overflow-hidden">
+                        <!-- Chat Messages -->
+                        <div id="aiChatMessages" class="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-50">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas fa-robot text-xs"></i>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-sm border text-sm text-gray-700 max-w-[80%]">
+                                    Hello! I'm your AI Campus Advisor. I can help you with your curriculum, predict your performance, or answer campus-related questions. How can I assist you today?
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="p-4 bg-white border-t">
+                            <div class="flex space-x-2">
+                                <input type="text" id="aiChatInput" class="form-input" placeholder="Ask me about your GPA, next class, or study tips...">
+                                <button onclick="sendAIChatMessage()" class="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Doubt Solver Section -->
+            <section id="doubt-solver" class="content-section hidden fade-in">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800 flex items-center">
+                        <i class="fas fa-brain mr-3 text-purple-600"></i> AI Doubt Solver
+                    </h2>
+                    <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-purple-500 mb-8">
+                        <p class="text-gray-600 mb-6">Ask any academic doubt and our AI will provide an explanation, notes, and related topics.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Select Subject</label>
+                                <select id="doubtSubject" class="form-input">
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Your Doubt</label>
+                                <textarea id="doubtText" class="form-input h-32" placeholder="Explain what you are struggling with..."></textarea>
+                            </div>
+                            <button onclick="solveDoubt()" id="solveDoubtBtn" class="w-full py-4 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition flex items-center justify-center">
+                                <i class="fas fa-magic mr-2"></i> Get AI Explanation
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="doubtResponse" class="hidden space-y-6 slide-up">
+                        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                            <h3 class="font-bold text-lg mb-3 flex items-center">
+                                <i class="fas fa-lightbulb mr-2 text-yellow-500"></i> AI Explanation
+                            </h3>
+                            <div id="doubtExplanation" class="text-gray-700 leading-relaxed"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                                <h3 class="font-bold text-lg mb-3 flex items-center">
+                                    <i class="fas fa-sticky-note mr-2 text-blue-500"></i> Key Notes
+                                </h3>
+                                <ul id="doubtNotes" class="list-disc pl-5 text-gray-700 space-y-2"></ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-amber-500">
+                                <h3 class="font-bold text-lg mb-3 flex items-center">
+                                    <i class="fas fa-tags mr-2 text-amber-500"></i> Related Topics
+                                </h3>
+                                <div id="doubtTopics" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Campus Services Section -->
+            <section id="campus" class="content-section hidden fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Hostel Management -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-hotel mr-3 text-indigo-500"></i> Hostel Booking
+                            </h3>
+                            <div id="hostelStatus"></div>
+                        </div>
+                        <div id="hostelInfo" class="space-y-4">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+
+                    <!-- Transport Management -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-bus mr-3 text-blue-500"></i> Transport Registration
+                            </h3>
+                            <div id="transportStatus"></div>
+                        </div>
+                        <div id="transportInfo" class="space-y-4">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+
+                    <!-- Complaints/Tickets -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm md:col-span-2">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-ticket-alt mr-3 text-rose-500"></i> Campus Helpdesk
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-1 bg-gray-50 p-6 rounded-xl border">
+                                <h4 class="font-bold text-sm mb-4">Raise a New Ticket</h4>
+                                <div class="space-y-4">
+                                    <select id="complaintCategory" class="form-input">
+                                        <option value="hostel">Hostel Issue</option>
+                                        <option value="transport">Transport Issue</option>
+                                        <option value="technical">Technical Issue</option>
+                                        <option value="academic">Academic Complaint</option>
+                                    </select>
+                                    <input id="complaintSubject" class="form-input" placeholder="Subject" />
+                                    <textarea id="complaintDescription" class="form-input h-24" placeholder="Detailed description..."></textarea>
+                                    <button onclick="submitCampusComplaint()" class="btn-primary w-full">Submit Ticket</button>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-2">
+                                <h4 class="font-bold text-sm mb-4">My Ticket History</h4>
+                                <div id="complaintsList" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Infrastructure Maintenance -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm md:col-span-2">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-tools mr-3 text-amber-500"></i> Infrastructure Maintenance
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-1 bg-gray-50 p-6 rounded-xl border">
+                                <h4 class="font-bold text-sm mb-4">Report an Issue</h4>
+                                <div class="space-y-4">
+                                    <select id="maintCategory" class="form-input">
+                                        <option value="Lab">Lab Equipment</option>
+                                        <option value="Projector">Projector/AV</option>
+                                        <option value="Electricity">Electricity/Light</option>
+                                        <option value="Furniture">Furniture</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <input id="maintLocation" class="form-input" placeholder="Exact Location (e.g. Lab 4, LHC-201)">
+                                    <textarea id="maintDescription" class="form-input h-24" placeholder="Describe the issue..."></textarea>
+                                    <button onclick="submitMaintenanceRequest()" class="btn-primary w-full">Submit Request</button>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-2">
+                                <h4 class="font-bold text-sm mb-4">Request Status</h4>
+                                <div id="maintList" class="space-y-4">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Discussion Forum Section -->
+            <section id="forum" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Discussion Forum</h2>
+                    <button onclick="openModal('newTopicModal')" class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i> Start Discussion
+                    </button>
+                </div>
+                <div id="forumTopicsList" class="grid grid-cols-1 gap-4">
+                    <!-- Dynamic -->
+                </div>
+            </section>
+
+            <!-- Competitive Exams Section -->
+            <section id="exams" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Competitive Exams</h2>
+                    <select id="examTypeFilter" onchange="loadMockTests()" class="form-input w-48">
+                        <option value="GATE">GATE</option>
+                        <option value="NEET">NEET</option>
+                        <option value="UPSC">UPSC</option>
+                        <option value="CAT">CAT</option>
+                    </select>
+                </div>
+                <div id="mockTestsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic -->
+                </div>
+
+                <!-- AI Exam Assistant -->
+                <div class="mt-12 bg-gradient-to-br from-indigo-600 to-purple-700 p-8 rounded-2xl shadow-xl text-white">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold mb-2 flex items-center">
+                                <i class="fas fa-brain mr-3"></i> AI Exam Difficulty Adjuster
+                            </h3>
+                            <p class="text-indigo-100 mb-6">Our AI analyzes your performance history to suggest the optimal difficulty level for your revision tests.</p>
+                            <div id="aiExamAdvice" class="bg-white/10 p-4 rounded-xl border border-white/20 hidden">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                        <button onclick="getAIExamAdvice()" class="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition shadow-lg shrink-0">
+                            Get AI Recommendation
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Academic Planner Section -->
+            <section id="planner" class="content-section hidden fade-in">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">Academic Planner</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-4">Set Academic Goals</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700">Target CGPA</label>
+                                <input type="number" id="targetCgpa" step="0.1" class="form-input" placeholder="e.g. 9.5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700">Study Hours / Day</label>
+                                <input type="number" id="studyHoursGoal" class="form-input" placeholder="e.g. 6">
+                            </div>
+                            <button onclick="savePlannerGoals()" class="btn-primary w-full">Save Goals</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-4">My Schedule</h3>
+                        <div id="plannerSchedule" class="space-y-3">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CGPA Predictor Section -->
+            <section id="cgpa" class="content-section hidden fade-in">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">GPA & CGPA Tracker</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-emerald-600">
+                        <p class="text-gray-500 mb-2 uppercase text-xs font-bold tracking-widest">Recorded CGPA</p>
+                        <h3 id="recordedCgpaVal" class="text-5xl font-black text-emerald-600">--</h3>
+                        <p class="text-sm text-gray-500 mt-2">From faculty-graded subjects</p>
+                        <div class="mt-4 flex gap-4 text-sm">
+                            <span><strong id="gpaCreditsEarned">0</strong> credits</span>
+                            <span class="text-rose-600"><strong id="gpaBacklogCount">0</strong> backlogs</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-indigo-600">
+                        <p class="text-gray-500 mb-2 uppercase text-xs font-bold tracking-widest">AI Predicted CGPA</p>
+                        <h3 id="predictedCgpaVal" class="text-5xl font-black text-indigo-600">--</h3>
+                        <p id="cgpaFeedback" class="mt-4 text-gray-600 text-sm"></p>
+                        <button onclick="runCgpaPrediction()" class="w-full mt-6 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition">
+                            <i class="fas fa-sync mr-2"></i> Refresh prediction
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="font-bold text-gray-800 mb-4">Subject grades</h3>
+                    <div id="gpaGradesList" class="space-y-2 text-sm">
+                        <p class="text-gray-500">Loading...</p>
+                    </div>
+                </div>
+                <div id="cgpaFactors" class="hidden"></div>
+            </section>
+
+            <!-- Resume Builder Section -->
+            <section id="resume" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Resume Builder</h2>
+                    <div class="flex gap-4">
+                        <button onclick="analyzeResumeATS()" class="bg-amber-50 text-amber-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-amber-100 transition">
+                            <i class="fas fa-magic mr-2"></i> ATS Analysis
+                        </button>
+                        <button onclick="exportResumePDF()" class="btn-primary">
+                            <i class="fas fa-file-pdf mr-2"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div class="lg:col-span-1 space-y-6">
+                        <div id="atsScoreCard" class="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-xl shadow-lg text-white hidden">
+                            <p class="text-xs font-bold uppercase opacity-80 mb-1">ATS Match Score</p>
+                            <h3 id="atsScoreVal" class="text-4xl font-black mb-3">--%</h3>
+                            <div id="atsFeedback" class="text-[10px] bg-white bg-opacity-20 p-2 rounded leading-relaxed"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border">
+                            <h3 class="font-bold mb-4">Personal Info</h3>
+                            <input id="resumeName" class="form-input mb-3" placeholder="Full Name">
+                            <input id="resumeEmail" class="form-input mb-3" placeholder="Email">
+                            <textarea id="resumeSummary" class="form-input h-24" placeholder="Professional Summary (Add skills like Python, SQL...)"></textarea>
+                        </div>
+                        <button onclick="saveResumeData()" class="btn-primary w-full">Save Resume</button>
+                    </div>
+                    <div class="lg:col-span-3 bg-white p-8 rounded-xl shadow-sm border h-[600px] overflow-y-auto">
+                        <div id="resumePreview" class="prose max-w-none">
+                            <!-- Live Preview -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cafeteria Section -->
+            <section id="cafeteria" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Campus Cafeteria</h2>
+                    <div class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">
+                        Cart: <span id="cartCount">0</span> items
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div id="cafeteriaMenuGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Menu items -->
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border h-fit">
+                        <h3 class="font-bold text-xl mb-4">Your Order</h3>
+                        <div id="cartItems" class="space-y-3 mb-6">
+                            <p class="text-gray-500 text-sm">Cart is empty</p>
+                        </div>
+                        <div class="border-t pt-4">
+                            <div class="flex justify-between font-bold text-lg mb-6">
+                                <span>Total:</span>
+                                <span>₹<span id="cartTotal">0</span></span>
+                            </div>
+                            <button onclick="placeCafeteriaOrder()" class="btn-primary w-full py-4">Checkout & Order</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Health Records Section -->
+            <section id="health" class="content-section hidden fade-in">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">Health & Medical Records</h2>
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-sm border">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">Blood Group</label>
+                            <input id="healthBloodGroup" class="form-input" placeholder="e.g. O+">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">Allergies</label>
+                            <input id="healthAllergies" class="form-input" placeholder="e.g. Peanuts, Penicillin">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-gray-700">Medical History</label>
+                            <textarea id="healthHistory" class="form-input h-24" placeholder="Any past surgeries or chronic conditions..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">Emergency Contact Name</label>
+                            <input id="healthEmergencyName" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">Emergency Contact Phone</label>
+                            <input id="healthEmergencyPhone" class="form-input">
+                        </div>
+                    </div>
+                    <button onclick="saveHealthRecords()" class="btn-primary w-full py-3">Update Medical Profile</button>
+                </div>
+            </section>
+
+            <!-- Security & Login History Section -->
+            <section id="security" class="content-section hidden fade-in">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Security & Privacy</h2>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase">Account Protected</span>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Security Settings -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-key mr-2 text-indigo-500"></i>
+                                Password & Auth
+                            </h3>
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition border border-dashed text-sm">
+                                <span class="block font-bold">Change Password</span>
+                                <span class="text-xs text-gray-500">Update your account password regularly</span>
+                            </button>
+                            <div class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-indigo-700">Two-Factor Auth</span>
+                                    <span class="text-[10px] bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded">Coming Soon</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Login History -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-gray-800 flex items-center">
+                                    <i class="fas fa-history mr-2 text-indigo-500"></i>
+                                    Recent Device Logins
+                                </h3>
+                                <button onclick="loadLoginHistory()" class="text-xs text-indigo-600 font-bold hover:underline">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="text-left text-gray-400 border-b">
+                                            <th class="pb-3 font-bold uppercase tracking-wider text-[10px]">Device / Browser</th>
+                                            <th class="pb-3 font-bold uppercase tracking-wider text-[10px]">IP Address</th>
+                                            <th class="pb-3 font-bold uppercase tracking-wider text-[10px]">Date & Time</th>
+                                            <th class="pb-3 font-bold uppercase tracking-wider text-[10px]">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="loginHistoryTable" class="divide-y">
+                                        <!-- Dynamic -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+             </section>
+
+             <!-- Finance & Store Section -->
+             <section id="finance" class="content-section hidden fade-in">
+                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                     <!-- Wallet Sidebar -->
+                     <div class="lg:col-span-1 space-y-6">
+                         <div class="bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-2xl shadow-xl text-white">
+                             <p class="text-xs font-bold uppercase opacity-80 mb-1">Wallet Balance</p>
+                             <h3 class="text-4xl font-black mb-6">₹<span id="walletBalance">0.00</span></h3>
+                             <button onclick="openModal('topupModal')" class="w-full py-3 bg-white text-emerald-700 rounded-xl font-bold hover:bg-emerald-50 transition shadow-lg">
+                                 <i class="fas fa-plus-circle mr-2"></i> Top Up
+                             </button>
+                         </div>
+                         
+                         <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                             <h4 class="font-bold text-gray-800 mb-4">Recent Transactions</h4>
+                             <div id="walletTransactions" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                                 <!-- Dynamic -->
+                             </div>
+                         </div>
+                     </div>
+
+                     <!-- Store Main -->
+                     <div class="lg:col-span-3">
+                         <div class="flex items-center justify-between mb-8 bg-white p-4 rounded-xl border">
+                             <h2 class="text-2xl font-bold text-gray-800">Campus Store</h2>
+                             <div class="flex space-x-2">
+                                 <button onclick="loadStoreItems('Book')" class="px-4 py-2 rounded-lg text-sm font-bold bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 transition">Books</button>
+                                 <button onclick="loadStoreItems('Merchandise')" class="px-4 py-2 rounded-lg text-sm font-bold bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 transition">Merch</button>
+                                 <button onclick="loadStoreItems('Stationery')" class="px-4 py-2 rounded-lg text-sm font-bold bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 transition">Stationery</button>
+                             </div>
+                         </div>
+
+                         <div id="storeItemsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                             <!-- Dynamic items -->
+                         </div>
+                     </div>
+                 </div>
+             </section>
+
+              <!-- Parking & Vehicle Section -->
+            <section id="parking" class="content-section hidden fade-in">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Campus Parking</h2>
+                    <button onclick="openModal('registerVehicleModal')" class="btn-primary">
+                        <i class="fas fa-car mr-2"></i> Register Vehicle
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="parkingSlotsGrid">
+                    <!-- Dynamic -->
+                </div>
+            </section>
+
+            <!-- Live Events & Streaming Section -->
+            <section id="streaming" class="content-section hidden fade-in">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">Webinars & Live Events</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="liveEventsGrid">
+                    <!-- Dynamic -->
+                </div>
+            </section>
+
+            <!-- Exam Schedule Section -->
+              <section id="exam-schedule" class="content-section hidden fade-in">
+                  <div class="flex items-center justify-between mb-8">
+                      <h2 class="text-3xl font-bold text-gray-800">Smart Exam Schedule</h2>
+                      <div class="flex space-x-2">
+                          <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase">Final Semester Exams</span>
+                      </div>
+                  </div>
+                  
+                  <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                      <table class="w-full text-left">
+                          <thead class="bg-gray-50 border-b">
+                              <tr>
+                                  <th class="p-4 font-bold text-gray-700">Subject</th>
+                                  <th class="p-4 font-bold text-gray-700">Type</th>
+                                  <th class="p-4 font-bold text-gray-700">Date</th>
+                                  <th class="p-4 font-bold text-gray-700">Time</th>
+                                  <th class="p-4 font-bold text-gray-700">Room</th>
+                                  <th class="p-4 font-bold text-gray-700 text-right">Status</th>
+                              </tr>
+                          </thead>
+                          <tbody id="examScheduleTable" class="divide-y">
+                              <!-- Dynamic rows -->
+                          </tbody>
+                      </table>
+                  </div>
+
+                  <!-- Exam Prep Widget -->
+                  <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div class="bg-indigo-600 p-6 rounded-2xl shadow-lg text-white">
+                          <h4 class="font-bold mb-2">Preparation Status</h4>
+                          <p class="text-xs opacity-80 mb-4">Based on your mock test scores</p>
+                          <div class="h-2 w-full bg-white/20 rounded-full overflow-hidden mb-2">
+                              <div class="h-full bg-white w-3/4"></div>
+                          </div>
+                          <p class="text-sm font-bold">75% Ready</p>
+                      </div>
+                      <div class="bg-amber-500 p-6 rounded-2xl shadow-lg text-white">
+                          <h4 class="font-bold mb-2">Next Exam In</h4>
+                          <p id="nextExamCountdown" class="text-3xl font-black">-- Days</p>
+                          <p class="text-xs opacity-80 mt-2">Time to focus on Revision!</p>
+                      </div>
+                      <div class="bg-emerald-500 p-6 rounded-2xl shadow-lg text-white">
+                          <h4 class="font-bold mb-2">Admit Card</h4>
+                          <p class="text-xs opacity-80 mb-4">Digitally signed & ready</p>
+                          <button class="w-full py-2 bg-white text-emerald-600 rounded-lg font-bold text-sm">
+                              <i class="fas fa-download mr-2"></i> Download PDF
+                          </button>
+                      </div>
+                  </div>
+              </section>
+          </div>
+      </main>
+
+    <!-- Modals -->
+    <div id="addCertificateModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('addCertificateModal')">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Add Skill Certification</h3>
+            <div class="space-y-4">
+                <input id="certificateTitle" class="form-input" placeholder="Certificate Title (e.g. AWS Certified)" />
+                <input id="certificateIssuer" class="form-input" placeholder="Issuing Organization" />
+                <select id="certificateCategory" class="form-input">
+                    <option value="Technical">Technical</option>
+                    <option value="Soft Skills">Soft Skills</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="date" id="certificateDate" class="form-input" />
+                <input id="certificateUrl" class="form-input" placeholder="Credential URL (Optional)" />
+                <button onclick="addPlacementCertificate()" class="btn-primary w-full">Add Certificate</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="newTopicModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('newTopicModal')">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Start New Discussion</h3>
+            <div class="space-y-4">
+                <input id="newTopicTitle" class="form-input" placeholder="Topic title" />
+                <textarea id="newTopicDesc" class="form-input h-32" placeholder="Description / Details"></textarea>
+                <button onclick="createForumTopic()" class="btn-primary w-full">Post Topic</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="topicDetailsModal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <span class="close-modal" onclick="closeModal('topicDetailsModal')">&times;</span>
+            <div id="topicDetailContent">
+                <h3 id="modalTopicTitle" class="text-2xl font-bold mb-2"></h3>
+                <p id="modalTopicDesc" class="text-gray-600 mb-6 pb-4 border-b"></p>
+                <div class="space-y-4 mb-6 max-h-[300px] overflow-y-auto" id="modalRepliesList"></div>
+                <div class="border-t pt-4">
+                    <textarea id="newReplyContent" class="form-input mb-3" placeholder="Write a reply..."></textarea>
+                    <button onclick="postForumReply()" class="btn-primary w-full">Post Reply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="topupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('topupModal')">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Top Up Wallet</h3>
+            <div class="space-y-4">
+                <input type="number" id="topupAmount" class="form-input" placeholder="Enter amount (₹)" />
+                <button onclick="submitWalletTopup()" class="btn-primary w-full">Add Credits</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="registerVehicleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('registerVehicleModal')">&times;</span>
+            <h3 class="text-xl font-bold mb-4">Register Your Vehicle</h3>
+            <div class="space-y-4">
+                <input id="vehicleNumber" class="form-input" placeholder="Vehicle Number (e.g. MH-12-AB-1234)" />
+                <select id="vehicleType" class="form-input">
+                    <option value="2-wheeler">2 Wheeler</option>
+                    <option value="4-wheeler">4 Wheeler</option>
+                </select>
+                <button onclick="registerVehicle()" class="btn-primary w-full">Register</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/student.js"></script>
+</body>
+</html>

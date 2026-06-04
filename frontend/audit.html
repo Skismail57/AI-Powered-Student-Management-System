@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audit Trail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Audit Trail</h1>
+            <button onclick="window.location.href='admin.html'" class="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm">Back to Admin</button>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-4">
+            <div class="flex gap-2 items-center flex-wrap">
+                <select id="method" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+                    <option value="">All methods</option>
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+                <input id="path" class="px-3 py-2 rounded bg-slate-800 border border-slate-700 w-48" placeholder="Path contains (/students)" />
+                <select id="actorRole" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+                    <option value="">All roles</option>
+                    <option value="admin">admin</option>
+                    <option value="faculty">faculty</option>
+                    <option value="student">student</option>
+                    <option value="parent">parent</option>
+                    <option value="anonymous">anonymous</option>
+                </select>
+                <input id="actorId" type="number" min="1" class="px-3 py-2 rounded bg-slate-800 border border-slate-700 w-28" placeholder="Actor ID" />
+                <input id="statusCode" type="number" min="100" max="599" class="px-3 py-2 rounded bg-slate-800 border border-slate-700 w-28" placeholder="Status" />
+                <input id="createdFrom" type="datetime-local" class="px-3 py-2 rounded bg-slate-800 border border-slate-700" />
+                <input id="createdTo" type="datetime-local" class="px-3 py-2 rounded bg-slate-800 border border-slate-700" />
+                <input id="pageSize" type="number" min="1" max="500" value="20" class="px-3 py-2 rounded bg-slate-800 border border-slate-700 w-28" />
+                <button onclick="loadLogs()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500">Load</button>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                <button onclick="applyPreset('errors')" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Errors only</button>
+                <button onclick="applyPreset('faculty_writes')" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Faculty writes</button>
+                <button onclick="applyPreset('student_writes')" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Student writes</button>
+                <button onclick="applyPreset('auth')" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Auth/login activity</button>
+                <button onclick="applyPreset('reset')" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Reset filters</button>
+            </div>
+        </div>
+        <div class="mb-3 flex items-center justify-between">
+            <p id="auditCount" class="text-xs text-slate-400">0 records</p>
+            <div class="flex items-center gap-2">
+                <select id="auditSortBy" class="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-xs" onchange="reloadFromFirstPage()">
+                    <option value="created_at">Sort: created_at</option>
+                    <option value="status_code">Sort: status</option>
+                    <option value="method">Sort: method</option>
+                    <option value="path">Sort: path</option>
+                </select>
+                <select id="auditSortDir" class="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-xs" onchange="reloadFromFirstPage()">
+                    <option value="desc">desc</option>
+                    <option value="asc">asc</option>
+                </select>
+                <button onclick="exportCurrentLogsCsv()" class="px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800 text-xs">Export filtered CSV</button>
+            </div>
+        </div>
+        <div class="mb-2 flex items-center justify-between text-xs text-slate-400">
+            <p id="auditPageInfo">Page 1</p>
+            <div class="flex items-center gap-2">
+                <button onclick="changeAuditPage(-1)" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Prev</button>
+                <button onclick="changeAuditPage(1)" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Next</button>
+            </div>
+        </div>
+        <div id="logs" class="space-y-2 text-sm"></div>
+    </div>
+    <script>
+        const API = 'http://localhost:5000';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        let currentAuditItems = [];
+        let auditPage = 1;
+        let auditTotal = 0;
+        if (!token || user.role !== 'admin') window.location.href = 'login.html';
+
+        function getJumpTarget(path, row) {
+            const p = String(path || '').toLowerCase();
+            if (p.includes('/messages')) {
+                const r = String(row?.actor_role || '').toLowerCase();
+                const i = Number(row?.actor_id || 0);
+                if (["admin", "faculty", "student", "parent"].includes(r) && i > 0) {
+                    return `messages.html?peer_role=${encodeURIComponent(r)}&peer_id=${i}`;
+                }
+                return 'messages.html';
+            }
+            if (p.includes('/interventions') || p.includes('/faculty')) return 'faculty.html';
+            if (p.includes('/parent')) return 'parent.html';
+            if (p.includes('/students')) return 'search.html?q=student';
+            if (p.includes('/assignments')) return 'search.html?q=assignment';
+            if (p.includes('/learning')) return 'search.html?q=learning';
+            if (p.includes('/audit') || p.includes('/monitoring')) return 'admin.html';
+            return 'admin.html';
+        }
+
+        function renderAuditList() {
+            const el = document.getElementById('logs');
+            if (!el) return;
+            const pageSize = Number(document.getElementById('pageSize')?.value || 20);
+            const totalPages = Math.max(1, Math.ceil(auditTotal / Math.max(1, pageSize)));
+            auditPage = Math.max(1, Math.min(auditPage, totalPages));
+            const pageInfoEl = document.getElementById('auditPageInfo');
+            if (pageInfoEl) pageInfoEl.textContent = `Page ${auditPage} of ${totalPages}`;
+
+            el.innerHTML = currentAuditItems.length ? currentAuditItems.map(x => `
+                <div class="p-3 rounded bg-slate-900 border border-slate-800">
+                    <div class="flex items-center justify-between gap-2">
+                        <p><span class="font-semibold">${x.method}</span> ${x.path}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-xs text-slate-500">${x.created_at || ''}</p>
+                            <a href="${getJumpTarget(x.path, x)}" class="text-xs px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Open related</a>
+                        </div>
+                    </div>
+                    <p class="text-slate-300 mt-1">${x.action}</p>
+                    <p class="text-xs text-slate-400 mt-1">actor: ${x.actor_role}#${x.actor_id || '-'} | status: ${x.status_code}</p>
+                </div>
+            `).join('') : '<p class="text-slate-400">No audit logs found.</p>';
+        }
+
+        function changeAuditPage(delta) {
+            auditPage += delta;
+            loadLogs();
+        }
+
+        function reloadFromFirstPage() {
+            auditPage = 1;
+            loadLogs();
+        }
+
+        function applyPreset(name) {
+            const methodEl = document.getElementById('method');
+            const pathEl = document.getElementById('path');
+            const actorRoleEl = document.getElementById('actorRole');
+            const actorIdEl = document.getElementById('actorId');
+            const statusCodeEl = document.getElementById('statusCode');
+            if (!methodEl || !pathEl || !actorRoleEl || !actorIdEl || !statusCodeEl) return;
+
+            if (name === 'errors') {
+                methodEl.value = '';
+                pathEl.value = '';
+                actorRoleEl.value = '';
+                actorIdEl.value = '';
+                statusCodeEl.value = '500';
+            } else if (name === 'faculty_writes') {
+                methodEl.value = 'POST';
+                pathEl.value = '';
+                actorRoleEl.value = 'faculty';
+                actorIdEl.value = '';
+                statusCodeEl.value = '';
+            } else if (name === 'student_writes') {
+                methodEl.value = 'POST';
+                pathEl.value = '';
+                actorRoleEl.value = 'student';
+                actorIdEl.value = '';
+                statusCodeEl.value = '';
+            } else if (name === 'auth') {
+                methodEl.value = 'POST';
+                pathEl.value = '/login';
+                actorRoleEl.value = '';
+                actorIdEl.value = '';
+                statusCodeEl.value = '';
+            } else {
+                methodEl.value = '';
+                pathEl.value = '';
+                actorRoleEl.value = '';
+                actorIdEl.value = '';
+                statusCodeEl.value = '';
+            }
+            reloadFromFirstPage();
+        }
+
+        async function loadLogs() {
+            const method = document.getElementById('method').value;
+            const path = document.getElementById('path').value.trim();
+            const actorRole = document.getElementById('actorRole').value;
+            const actorId = Number(document.getElementById('actorId').value || 0);
+            const statusCode = Number(document.getElementById('statusCode').value || 0);
+            const pageSize = Number(document.getElementById('pageSize').value || 20);
+            const sortBy = document.getElementById('auditSortBy').value || 'created_at';
+            const sortDir = document.getElementById('auditSortDir').value || 'desc';
+            const createdFrom = (document.getElementById('createdFrom').value || '').trim();
+            const createdTo = (document.getElementById('createdTo').value || '').trim();
+            const el = document.getElementById('logs');
+            el.innerHTML = '<p class="text-slate-400">Loading...</p>';
+            const qs = new URLSearchParams();
+            if (method) qs.set('method', method);
+            if (path) qs.set('path', path);
+            if (actorRole) qs.set('actor_role', actorRole);
+            if (actorId > 0) qs.set('actor_id', String(actorId));
+            if (statusCode > 0) qs.set('status_code', String(statusCode));
+            if (createdFrom) qs.set('created_from', createdFrom);
+            if (createdTo) qs.set('created_to', createdTo);
+            qs.set('page', String(auditPage));
+            qs.set('page_size', String(pageSize));
+            qs.set('sort_by', sortBy);
+            qs.set('sort_dir', sortDir);
+            try {
+                const res = await fetch(`${API}/audit/logs?${qs.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                if (!res.ok) {
+                    el.innerHTML = `<p class="text-red-300">${data.message || 'Failed to load audit logs'}</p>`;
+                    return;
+                }
+                const items = data.items || [];
+                currentAuditItems = items;
+                auditTotal = Number(data.total || items.length || 0);
+                auditPage = Number(data.page || auditPage);
+                const countEl = document.getElementById('auditCount');
+                if (countEl) countEl.textContent = `${items.length} records (total ${auditTotal})`;
+                renderAuditList();
+            } catch (e) {
+                currentAuditItems = [];
+                auditTotal = 0;
+                el.innerHTML = '<p class="text-red-300">Failed to load audit logs</p>';
+            }
+        }
+
+        function exportCurrentLogsCsv() {
+            const items = currentAuditItems || [];
+            if (!items.length) return;
+            const headers = ['id', 'actor_role', 'actor_id', 'action', 'method', 'path', 'status_code', 'created_at'];
+            const escapeCsv = (v) => {
+                const s = String(v ?? '');
+                return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+            };
+            const rows = [
+                headers.join(','),
+                ...items.map(x => headers.map(h => escapeCsv(x[h])).join(','))
+            ];
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audit_logs_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        loadLogs();
+    </script>
+</body>
+</html>
