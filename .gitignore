@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.bak
 
 # Environment and secrets
 backend/.env
