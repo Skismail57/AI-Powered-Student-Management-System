@@ -7,6 +7,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/Skismail57/AI-Powered-Student-Management-System?style=social)](https://github.com/Skismail57/AI-Powered-Student-Management-System)
 
+<p align="center">
+  <img src="Github%20images/Github%20Cover%20Image.png" alt="AI-Powered Student Management System cover image" width="100%" />
+</p>
+
 A full-stack academic management platform for educational institutions with dedicated portals for `admin`, `faculty`, `student`, and `parent` users. The system combines student administration, attendance, curriculum workflows, GPA tracking, analytics, notifications, reports, and AI-assisted academic insights in one project.
 
 ## Overview
@@ -180,6 +184,38 @@ AI-Powered-Student-Management-System/
 `-- pytest.ini                  # Test configuration
 ```
 
+## Architecture Diagram
+
+```text
++-------------------+        +---------------------+        +----------------------+
+|    Frontend UI    | <----> |   Flask Backend     | <----> |      SQLite DB       |
+| HTML / CSS / JS   |        | Auth + APIs + Logic |        | Student / Academic   |
++-------------------+        +---------------------+        +----------------------+
+         |                               |                              |
+         |                               |                              |
+         v                               v                              v
++-------------------+        +---------------------+        +----------------------+
+| Role-Based Pages  |        | AI / Analytics      |        | Reports / Exports    |
+| Admin / Faculty   |        | Prediction / Risk   |        | CSV / XLSX / PDF     |
+| Student / Parent  |        | Monitoring / Alerts |        | Backup / Audit Logs  |
++-------------------+        +---------------------+        +----------------------+
+```
+
+The architecture follows a simple full-stack pattern where the frontend interfaces communicate with Flask APIs, the backend handles authentication and business logic, and the database stores academic, user, and reporting data.
+
+## Key Modules
+
+- **Authentication Module**: login, registration, JWT authentication, role-based authorization, and token refresh
+- **Admin Module**: dashboard, institutions, departments, subjects, faculty, students, reports, and system monitoring
+- **Faculty Module**: attendance, grading, research tracking, class tools, and faculty-focused workflows
+- **Student Module**: dashboard, curriculum, timetable, study materials, quizzes, AI support, and learning progress
+- **Parent Module**: student monitoring, attendance trends, notifications, and performance summary view
+- **Academic Module**: curriculum, OBE, GPA, credits, grades, audit, and academic calendar management
+- **Analytics Module**: student insights, risk detection, prediction, explainable AI, and dashboard summaries
+- **Communication Module**: announcements, notifications, messages, alerts, and engagement features
+- **Reporting Module**: CSV, XLSX, PDF export, stats, logs, and operational reporting
+- **System Utilities**: backups, audit logs, background jobs, and configuration support
+
 ## Getting Started
 
 ### Prerequisites
@@ -249,13 +285,27 @@ Full API details are available in `backend/API_DOCS.md`, including:
 - GPA, curriculum, and master data endpoints
 - Monitoring, jobs, and backup operations
 
-## Why This Project Stands Out
+## Advantages of the Project
 
-- Combines classic student management with analytics and AI-assisted features
-- Covers multiple real-world academic workflows in one repository
-- Demonstrates role-based architecture across frontend and backend
-- Includes reporting, monitoring, and operational tooling beyond CRUD
-- Works well as a portfolio, academic, or final-year showcase project
+- Combines student management, analytics, AI, and reporting in one integrated platform
+- Supports multiple user roles with clearly separated workflows and dashboards
+- Covers practical academic use cases instead of only basic CRUD features
+- Includes export, monitoring, backup, and operational capabilities for a more complete system
+- Demonstrates full-stack development using frontend, backend, database, and API integration
+- Useful for portfolio presentation, final-year academic submission, and recruiter review
+
+## Future Enhancements
+
+- Add Docker support for easier local setup and deployment
+- Deploy frontend and backend to cloud hosting platforms
+- Add CI/CD pipelines for automated testing and release workflows
+- Improve responsive design and mobile optimization across all portals
+- Add email and SMS notification integration
+- Introduce real-time dashboards and websocket-driven updates across more modules
+- Expand AI models for smarter recommendation, prediction, and intervention support
+- Add database migrations and stronger production-ready configuration management
+- Increase test coverage with unit, API, and end-to-end test suites
+- Add role-based admin controls for more granular permissions
 
 ## Notes
 
