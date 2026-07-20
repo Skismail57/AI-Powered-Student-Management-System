@@ -8,7 +8,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/Skismail57/AI-Powered-Student-Management-System?style=social)](https://github.com/Skismail57/AI-Powered-Student-Management-System)
 
 <p align="center">
-  <img src="Github%20images/Github%20Cover%20Image.png" alt="AI-Powered Student Management System cover image" width="100%" />
+  <img src="AI-Powered-Student-Management-System.jpg" alt="AI-Powered-Student-Management-System" width="100%" />
 </p>
 
 A full-stack academic management platform for educational institutions with dedicated portals for `admin`, `faculty`, `student`, and `parent` users. The system combines student administration, attendance, curriculum workflows, GPA tracking, analytics, notifications, reports, and AI-assisted academic insights in one project.
